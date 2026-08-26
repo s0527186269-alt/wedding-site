@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הזמנה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Assistant:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night-1:oklch(0.17 0.055 305);
+  --night-2:oklch(0.12 0.042 318);
+  --night-3:oklch(0.22 0.07 295);
+  --light:oklch(0.98 0.006 90);
+  --light-dim:oklch(0.98 0.006 90 / 0.80);
+  --light-faint:oklch(0.98 0.006 90 / 0.55);
+  --gold:oklch(0.84 0.11 82);
+  --gold-deep:oklch(0.71 0.12 76);
+  --glass:oklch(1 0 0 / 0.10);
+  --glass-line:oklch(1 0 0 / 0.22);
+  --tint:0.55;
+  /* מרווח הנשימה בין חלק לחלק */
+  --gap:clamp(6rem,14vh,11rem);
+  --head:"Heebo",system-ui,sans-serif;
+  --body:"Assistant",system-ui,sans-serif;
+  --script:"Great Vibes",cursive;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{font-family:var(--body);font-weight:400;color:var(--light);
+  font-size:1.25rem;line-height:1.85;background:var(--night-2);overflow-x:hidden}
+h1,h2,h3,h4{font-family:var(--head);font-weight:700;line-height:1.15}
+
+/* ===== גלילה חלקה ===== */
+#smooth{will-change:transform}
+body.smooth-on #smooth{position:fixed;top:0;left:0;width:100%}
+
+/* ===== רקע ===== */
+.photo{position:fixed;inset:0;z-index:-31;background-size:cover;background-position:center;background-repeat:no-repeat}
+.sky{position:fixed;inset:0;z-index:-30;transition:opacity .6s;
+  background:
+    radial-gradient(120% 90% at 78% 12%, oklch(0.30 0.09 300) 0%, transparent 55%),
+    radial-gradient(110% 80% at 12% 82%, oklch(0.26 0.075 315) 0%, transparent 58%),
+    radial-gradient(90% 70% at 50% 45%, oklch(0.21 0.06 292) 0%, transparent 70%),
+    linear-gradient(165deg, var(--night-1) 0%, var(--night-2) 55%, var(--night-3) 100%)}
+.sky.over{opacity:var(--tint)}
+.glow{position:fixed;inset:0;z-index:-29;pointer-events:none;filter:blur(40px);
+  background:
+    radial-gradient(closest-side at 22% 30%, oklch(0.78 0.13 78 / 0.20), transparent),
+    radial-gradient(closest-side at 70% 68%, oklch(0.72 0.12 72 / 0.14), transparent)}
+.bokeh{position:fixed;inset:0;z-index:-28;pointer-events:none;opacity:.8}
+.grain{position:fixed;inset:0;z-index:-27;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* הניצוצות חיים רק בתוך אזור השמות */
+.marry-block{position:relative;margin-top:5.5rem}
+#sparkles{position:absolute;inset:-8% -4%;width:calc(100% + 8%);pointer-events:none;z-index:1}
+.marry,.std,.sketch-wrap{position:relative;z-index:2}
+
+main{position:relative;z-index:1}
+
+/* ===== אנימציות ===== */
+@keyframes rise{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes glimmer{0%,100%{background-position:200% 50%}50%{background-position:-60% 50%}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.75;transform:scale(1.04)}}
+@keyframes nudge{0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(8px);opacity:1}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes zoomin{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:.85}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes goldPulse{0%,100%{color:var(--gold)}50%{color:oklch(0.96 0.055 90)}}
+@keyframes letterIn{
+  0%{opacity:0;transform:translateY(34px) rotate(-8deg) scale(.86)}
+  60%{opacity:1}
+  100%{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
+.bokeh circle{animation:twinkle 7s ease-in-out infinite}
+.hero-in{animation:rise 2.2s cubic-bezier(.16,1,.3,1) both}
+.verse-ring{animation:spin 140s linear infinite;transform-origin:50% 50%}
+.breathe{animation:breathe 9s ease-in-out infinite}
+
+/* חשיפה איטית ורכה יותר */
+.reveal{opacity:0;transform:translateY(44px);
+  transition:opacity 2.1s cubic-bezier(.16,1,.3,1),transform 2.1s cubic-bezier(.16,1,.3,1)}
+.reveal[data-visible="true"]{opacity:1;transform:none}
+
+.div-gem{display:flex;align-items:center;justify-content:center;gap:1.1rem;
+  width:min(92%,34rem);margin-inline:auto}
+.div-gem .rule{flex:1}
+.div-gem .gem{width:1.7rem;height:1.7rem;flex:none;color:var(--gold);
+  filter:drop-shadow(0 0 10px oklch(0.84 0.11 82 / .45))}
+.rule{height:1px;background:linear-gradient(90deg,transparent,oklch(0.84 0.11 82 / .5),var(--gold),oklch(0.84 0.11 82 / .5),transparent)}
+.shimmer{background-image:linear-gradient(100deg,
+  var(--light) 32%,var(--gold) 46%,oklch(0.98 0.06 92) 52%,var(--gold) 58%,var(--light) 72%);
+  background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:glimmer 11s ease-in-out infinite}
+.ico{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+.bsd{position:absolute;top:1.75rem;inset-inline:0;text-align:center;z-index:5;
+  font-size:1.05rem;color:var(--light-faint);letter-spacing:.1em}
+
+.cue{display:flex;justify-content:center;padding:1.5rem 0 0}
+.cue button{width:3rem;height:3rem;border-radius:9999px;border:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;background:var(--light);color:var(--night-2);
+  animation:nudge 3.2s ease-in-out infinite;box-shadow:0 10px 30px -12px oklch(0 0 0 / .7)}
+.cue .ico{width:1.35rem;height:1.35rem}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.7rem;cursor:pointer;
+  border-radius:9999px;text-decoration:none;font-family:var(--head);
+  font-size:1.2rem;font-weight:700;padding:1.05rem 2.4rem;border:1px solid transparent;
+  transition:transform .5s,filter .5s,border-color .5s,color .5s}
+.btn-solid{background:linear-gradient(140deg,var(--gold),var(--gold-deep));color:oklch(0.16 0.03 300);
+  box-shadow:0 16px 36px -20px oklch(0.84 0.11 82 / .8)}
+.btn-solid:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.btn .ico{width:1.25rem;height:1.25rem}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ===== מסך פתיחה ===== */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:5.5rem 1rem 0;text-align:center}
+#trail{position:fixed;inset:0;z-index:25;pointer-events:none}
+.ring-wrap{position:relative;aspect-ratio:1;width:min(94vw,42rem);display:flex;align-items:center;justify-content:center}
+.ring-wrap > svg{position:absolute;inset:0;width:100%;height:100%}
+.inner-ring{position:absolute;width:60%;height:60%;border-radius:9999px;border:1px solid oklch(0.84 0.11 82 / .26)}
+.hero-in{position:relative;z-index:2;max-width:66%;display:flex;align-items:center;justify-content:center}
+.mono-img{display:block;width:min(48vw,19rem);max-height:min(38vh,17rem);
+  object-fit:contain;filter:drop-shadow(0 14px 34px oklch(0 0 0 / .55))}
+.mono-none{display:flex;align-items:center;justify-content:center;
+  width:min(30vw,10rem);height:min(30vw,10rem);color:oklch(0.84 0.11 82 / .45)}
+.mono-none svg{width:100%;height:100%}
+
+/* ===== דפי ההזמנה ===== */
+.fronts{padding:var(--gap) 1rem}
+.fronts-wrap{max-width:84rem;margin:0 auto;display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:center;gap:0;perspective:2400px}
+.page-par{will-change:transform}
+.page{position:relative;width:min(86vw,30rem);transition:transform 1.4s cubic-bezier(.16,1,.3,1)}
+.page.a{transform:rotateY(16deg) rotate(-1.2deg);transform-origin:left center;z-index:2}
+.page.b{transform:rotateY(-16deg) rotate(1.2deg);transform-origin:right center;z-index:1}
+.page:hover{transform:rotateY(0) rotate(0) scale(1.03);z-index:3}
+@media(max-width:760px){
+  .fronts-wrap{gap:2rem}
+  .page.a,.page.b{transform:none;width:min(90vw,30rem)}
+}
+.page-frame{position:relative;aspect-ratio:3/4;width:100%;overflow:hidden;border-radius:.4rem;
+  box-shadow:0 55px 90px -45px oklch(0 0 0 / .95), 0 0 0 1px oklch(1 0 0 / .07)}
+.page-frame img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ===== מועד וספירה ===== */
+.count{padding:var(--gap) 1rem;text-align:center}
+.count-in{max-width:70rem;margin:0 auto}
+.date-day{font-weight:900;font-size:clamp(3.2rem,12vw,7.5rem);line-height:1.05;color:var(--light);
+  letter-spacing:-0.01em}
+.date-heb{margin-top:1.1rem;font-family:var(--head);font-weight:600;
+  font-size:clamp(2.4rem,8vw,4.8rem);line-height:1.15;color:var(--light-dim)}
+.date-num{margin-top:.9rem;font-family:var(--head);font-weight:400;
+  font-size:clamp(1.9rem,5.5vw,3.1rem);letter-spacing:.08em;color:var(--light-faint)}
+.beod{margin-top:3.5rem;font-family:var(--head);font-weight:400;
+  font-size:clamp(1.5rem,4vw,2.1rem);color:var(--light-dim)}
+/* רשת קבועה — ארבעה בשורה, ומתחת ל-600px שניים בשורה.
+   כך אף פעם לא נוצר מצב של שלושה ואז אחד בודד. */
+.units{margin-top:1.75rem;display:grid;gap:1rem;justify-content:center;
+  grid-template-columns:repeat(4,minmax(0,1fr));max-width:46rem;margin-inline:auto}
+@media(max-width:600px){
+  .units{grid-template-columns:repeat(2,minmax(0,1fr));max-width:23rem;gap:.75rem}
+}
+.unit{width:auto;min-width:0;border-radius:1.6rem;padding:1.9rem .75rem 1.35rem;
+  background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(14px);
+  box-shadow:0 24px 50px -34px oklch(0 0 0 / .9)}
+.unit .n{font-family:var(--head);font-weight:300;font-size:clamp(2.6rem,8.5vw,5.2rem);line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--light)}
+.unit .l{margin-top:1rem;font-size:clamp(.95rem,2.6vw,1.1rem);letter-spacing:.14em;color:var(--light-faint)}
+
+/* ===== מתחתנים + Save the date ===== */
+
+.marry{font-family:var(--head);font-weight:900;line-height:1.1;
+  font-size:clamp(2.8rem,10vw,6.5rem);letter-spacing:-0.015em}
+.std{margin-top:1.2rem;font-family:var(--script);font-weight:400;line-height:1.35;
+  font-size:clamp(3.2rem,11vw,6.5rem)}
+.std span{display:inline-block;opacity:0;color:var(--gold);
+  text-shadow:0 0 28px oklch(0.84 0.11 82 / .38), 0 2px 14px oklch(0 0 0 / .35);
+  animation:letterIn 1.3s cubic-bezier(.16,1,.3,1) forwards,
+            goldPulse 5.5s ease-in-out infinite;
+  animation-play-state:paused}
+.reveal[data-visible="true"] .std span{animation-play-state:running}
+
+/* קו מצויר קליל מתחת ל-Save the Date */
+.sketch-wrap{margin-top:-.3rem;display:flex;justify-content:center}
+.sketch{width:min(78%,34rem);height:auto;color:var(--gold);overflow:visible}
+.sketch path{fill:none;stroke:currentColor;stroke-linecap:round;
+  stroke-dasharray:1;stroke-dashoffset:1;
+  animation:draw 1.5s cubic-bezier(.16,1,.3,1) forwards;animation-play-state:paused}
+.reveal[data-visible="true"] .sketch path{animation-play-state:running}
+
+.blessing{max-width:52rem;margin:0 auto;font-size:1.45rem;line-height:2.3;color:var(--light-dim)}
+.hosts{margin-top:2.2rem;font-family:var(--head);font-weight:800;line-height:1.15;
+  font-size:clamp(2.6rem,8vw,5rem);color:var(--gold);
+  text-shadow:0 0 34px oklch(0.84 0.11 82 / .28)}
+
+/* ===== עיגולים ===== */
+/* קרוב יותר לחלקים שמעליו ומתחתיו */
+.info{padding:calc(var(--gap) * .55) 1rem}
+.info-grid{max-width:74rem;margin:0 auto;display:grid;gap:2rem;justify-items:center}
+@media(min-width:768px){.info-grid{grid-template-columns:repeat(3,1fr)}}
+.flip{perspective:1600px;width:min(78vw,19rem);aspect-ratio:1}
+.flip-in{position:relative;width:100%;height:100%;transform-style:preserve-3d;
+  transition:transform 1.2s cubic-bezier(.16,1,.3,1)}
+.flip:hover .flip-in,.flip:focus-within .flip-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:9999px;padding:2rem;text-align:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(14px);
+  box-shadow:0 30px 60px -40px oklch(0 0 0 / .9)}
+.face.back{transform:rotateY(180deg)}
+.face .ico-lg{width:2.2rem;height:2.2rem;color:var(--gold)}
+.face .q{margin-top:1.2rem;font-family:var(--head);font-weight:700;
+  font-size:clamp(2rem,5.5vw,2.6rem);color:var(--light)}
+.face .r{margin-top:1.3rem;width:4rem}
+.face.back .bt{font-family:var(--head);font-weight:700;font-size:1.6rem;color:var(--light)}
+.face.back .bx{margin-top:.7rem;font-size:1.1rem;line-height:1.7;color:var(--light-dim);padding:0 .5rem}
+.face.back .btn{margin-top:1.3rem;padding:.7rem 1.5rem;font-size:1rem}
+
+/* ===== בלוק מאוחד: ברכת ההורים + נשמח בהשתתפותכם ===== */
+.unite{padding:var(--gap) 1rem;text-align:center}
+.unite-in{max-width:60rem;margin:0 auto}
+.unite .blessing{margin-top:3.5rem}
+
+
+/* ===== ברכות ===== */
+/* נספח צמוד לבלוק של בעלי השמחה — לא סקשן נפרד */
+.greet{padding:2.25rem 1rem var(--gap)}
+/* קופסת זכוכית — אותו חומר של הטיימר והעיגולים המתהפכים */
+.greet-in{max-width:52rem;margin:0 auto;
+  border-radius:1.5rem;padding:2rem clamp(1.1rem,4vw,2.4rem) 2.25rem;
+  background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(14px);
+  box-shadow:0 30px 60px -40px oklch(0 0 0 / .9)}
+.greet h2{margin-top:0;font-weight:700;font-size:clamp(1.45rem,3.6vw,2.1rem);color:var(--light-dim)}
+.greet .sub{margin-top:.5rem;font-size:1rem;color:var(--light-faint)}
+.greet form{margin-top:1.75rem;display:flex;flex-direction:column;gap:1.6rem}
+.greet label{display:block;font-family:var(--head);font-size:1rem;font-weight:500;color:var(--light-faint)}
+.greet input,.greet textarea{margin-top:.7rem;width:100%;border:0;
+  border-bottom:1px solid oklch(1 0 0 / .3);background:transparent;padding:.7rem .25rem;
+  font-size:1.05rem;font-family:var(--body);color:var(--light);outline:none;resize:none;
+  transition:border-color .5s}
+.greet textarea{line-height:2}
+.greet input:focus,.greet textarea:focus{border-color:var(--gold)}
+.greet .btn{align-self:center;font-size:1rem;padding:.8rem 1.9rem}
+.sent{margin-top:3rem;display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center}
+.sent .mark{width:3.8rem;height:3.8rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,var(--gold),var(--gold-deep));color:oklch(0.16 0.03 300)}
+.sent .t{font-family:var(--head);font-weight:700;font-size:2rem}
+.sent .s{color:var(--light-faint)}
+.sent .again{margin-top:.5rem;background:none;border:0;cursor:pointer;color:var(--gold);
+  font-family:var(--head);font-size:1.05rem;font-weight:700}
+
+/* ===== סיום ===== */
+footer{padding:calc(var(--gap) * .8) 1rem calc(var(--gap) * .7);text-align:center}
+footer .rule{width:12rem;margin:0 auto 2.6rem}
+.btn-outline{background:transparent;border-color:oklch(1 0 0 / .32);color:var(--light-dim);
+  box-shadow:none}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-1px)}
+.cta{font-size:.98rem;font-weight:600;padding:.7rem 1.7rem;gap:.5rem}
+.cta .ico{width:1rem;height:1rem}
+
+/* ===== דיאלוג ===== */
+.dialog{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:0 1.5rem;animation:fadein .9s both}
+.dialog-veil{position:absolute;inset:0;background:oklch(0.10 0.03 310 / .64);backdrop-filter:blur(6px)}
+.dialog-box{position:relative;width:100%;max-width:36rem;border-radius:1.6rem;text-align:center;
+  padding:3.2rem 2.5rem 2.9rem;color:oklch(0.20 0.03 300);
+  background:linear-gradient(150deg, oklch(0.99 0.005 90 / .97), oklch(0.95 0.012 88 / .95));
+  box-shadow:0 50px 110px -50px oklch(0 0 0 / .95);animation:zoomin 1s cubic-bezier(.16,1,.3,1) both}
+.dialog-close{position:absolute;top:1.15rem;inset-inline-start:1.15rem;width:2.5rem;height:2.5rem;
+  border-radius:.6rem;cursor:pointer;background:transparent;color:oklch(0.3 0.03 300);
+  border:1px solid oklch(0.3 0.03 300 / .35);display:flex;align-items:center;justify-content:center;
+  transition:border-color .4s,color .4s}
+.dialog-close:hover{border-color:var(--gold-deep);color:var(--gold-deep)}
+.dialog-close .ico{width:1.1rem;height:1.1rem}
+.dialog-box h2{font-weight:700;font-size:clamp(2rem,5.8vw,2.8rem)}
+.dialog-box p{margin-top:1rem;font-size:1.15rem;color:oklch(0.42 0.02 300)}
+.dialog-actions{margin-top:2.3rem;display:flex;flex-direction:row-reverse;justify-content:center;gap:1rem;flex-wrap:wrap}
+.dialog-actions .btn{min-width:12rem;font-size:1.25rem}
+.btn-dark{background:oklch(0.24 0.035 295);color:var(--light)}
+.btn-dark:hover{transform:translateY(-2px);filter:brightness(1.18)}
+.btn-ghost{background:transparent;border-color:oklch(0.3 0.03 300 / .4);color:oklch(0.26 0.03 300)}
+.btn-ghost:hover{border-color:var(--gold-deep);color:var(--gold-deep)}
+
+.mtoggle{position:fixed;bottom:1.6rem;left:1.6rem;z-index:40;width:3.6rem;height:3.6rem;
+  border-radius:9999px;border:1px solid var(--glass-line);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--glass);color:var(--light);backdrop-filter:blur(12px);
+  transition:border-color .5s;box-shadow:0 16px 34px -20px oklch(0 0 0 / .9)}
+.mtoggle:hover{border-color:var(--gold)}
+.mtoggle .ico{width:1.45rem;height:1.45rem}
+.mtoggle[data-on="true"] .ico{color:var(--gold)}
+
+/* ===== מובייל: אותה פריסה, נשימה מצומצמת ===== */
+@media(max-width:760px){
+  :root{--gap:clamp(3rem,7vh,4.75rem)}
+  .hero{padding-top:4rem}
+  .cue{padding:1rem 0 0}
+  .cue button{width:2.6rem;height:2.6rem}
+  .marry-block{margin-top:3.25rem}
+  .beod{margin-top:2.25rem}
+  .unite .blessing{margin-top:2.25rem}
+  .hosts{margin-top:1.4rem}
+  .sketch{width:88%}
+  .greet{padding-top:1.5rem}
+  .div-gem{gap:.75rem}
+  .flip{width:min(76vw,17rem)}
+  .info-grid{gap:1.5rem}
+}
+@media(max-width:420px){
+  .units{gap:.6rem}
+  .unit{padding:1.4rem .5rem 1.05rem;border-radius:1.3rem}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .verse-ring,.breathe,.shimmer,.hero-in,.cue button,.bokeh circle,.std span{animation:none!important}
+  .std span{opacity:1}
+  .reveal{opacity:1;transform:none;transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="photo" id="photo" aria-hidden="true"></div>
+<div class="sky" id="sky"></div>
+<div class="glow"></div>
+<svg class="bokeh" id="bokeh" preserveAspectRatio="none" aria-hidden="true"></svg>
+<div class="grain"></div>
+<canvas id="trail" aria-hidden="true"></canvas>
+
+<div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dt" hidden>
+  <div class="dialog-veil"></div>
+  <div class="dialog-box">
+    <button class="dialog-close" onclick="choose(false)" aria-label="סגירה">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <h2 id="dt">לפתוח עם מוזיקה?</h2>
+    <p>תוכלו לשנות זאת בכל רגע בכפתור שבפינת המסך</p>
+    <div class="dialog-actions">
+      <button class="btn btn-dark" onclick="choose(true)">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        כן!
+      </button>
+      <button class="btn btn-ghost" onclick="choose(false)">לא, תודה.</button>
+    </div>
+  </div>
+</div>
+
+<audio id="audio" loop preload="none" muted></audio>
+<button class="mtoggle" id="mtoggle" data-on="false" aria-pressed="false" aria-label="הפעלת המוזיקה" hidden>
+  <svg class="ico" id="micon" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
+</button>
+
+<div id="smooth"><main id="app"></main></div>
+
+<script>
+/* =======================================================
+   תוכן ההזמנה. שדה ריק — הרכיב שלו לא נוצר, והמרווח נעלם.
+   ======================================================= */
+/*__DATA_START__*/
+const data = {
+  bsd: 'בס"ד',
+  backgroundImage: "",
+  backgroundTint: 55,
+
+  monogramImage: "",
+  verse: "קול חתן וקול כלה · קול ששון וקול שמחה · עוד ישמע בהרי יהודה ובחוצות ירושלים",
+
+  invitationA: "",
+  invitationB: "",
+
+  dayLabel: "יום חמישי",
+  hebrewDate: "ט׳ בכסלו תשפ״ז",
+  gregorianDate: "19.11.26",
+  countdownLabel: "בעוד:",
+  targetDate: "2026-11-19T19:00",
+
+  marryingLine: "מוטי ונחמי מתחתנים",
+  saveTheDate: "Save the date!",
+
+  blessing: "בשבח והודיה לבורא עולם, שמחים להזמינכם לחגוג עמנו את שמחת נישואי ילדינו — שתהיה השעה טובה ומוצלחת.",
+  hosts: "אברהם וגיטי פיין",
+  calendarLabel: "שמרו ביומן",
+
+  whereQ: "איפה",
+  whereInfo: "אולמי היכל הפאר\nרחוב הרב קוק 12, בני ברק",
+  whereBtn: "פתיחת מפה",
+
+  whenQ: "מתי",
+  whenInfo: "יום חמישי, 19 בנובמבר 2026\nקבלת פנים 19:00 · חופה 20:00",
+  whenBtn: "שמרו ביומן",
+
+  howQ: "איך מגיעים",
+  howInfo: "חניה חופשית בחניון האולם\nהסעות יציאה מירושלים בשעה 17:30",
+  howBtn: "פתיחת Waze",
+
+
+  greetTitle: "ברכות ואיחולים",
+  greetSub: "",
+
+  ctaText: "רוצים גם הזמנה כזו?",
+  ctaEmail: "",
+
+  musicUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=solo-piano-melody-118392.mp3",
+};
+/*__DATA_END__*/
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const has = v => typeof v === "string" && v.trim().length > 0;
+const nl = s => esc(s).replace(/\n/g, "<br>");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ================= בניית העמוד ================= */
+function render(){
+  const d = data, parts = [];
+
+  if(has(d.bsd)) parts.push(`<p class="bsd">${esc(d.bsd)}</p>`);
+
+  /* מסך פתיחה — ללא טקסט כלל. רק המונוגרמה והפסוק המסתובב. */
+  const monogram = has(d.monogramImage)
+    ? `<img class="mono-img" src="${esc(d.monogramImage)}" alt="מונוגרמה">`
+    : `<div class="mono-none" title="המונוגרמה מועלית בפאנל הניהול">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+              stroke-linejoin="round" aria-hidden="true">
+           <path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9.5 3 8 9l4 12M14.5 3 16 9l-4 12"/>
+         </svg>
+       </div>`;
+
+  parts.push(`<section class="hero"><div class="ring-wrap">
+    ${has(d.verse) ? verseRing(d.verse) : ""}
+    <div class="inner-ring breathe"></div>
+    <div class="hero-in">${monogram}</div>
+  </div></section>`);
+  parts.push(cue());
+
+  /* דפי ההזמנה — עם תזוזה עדינה בגלילה */
+  const pages = [];
+  if(has(d.invitationA)) pages.push(`<figure class="page-par" data-par="0.05"><div class="page a"><div class="page-frame"><img src="${esc(d.invitationA)}" alt="דף ההזמנה"></div></div></figure>`);
+  if(has(d.invitationB)) pages.push(`<figure class="page-par" data-par="-0.05"><div class="page b"><div class="page-frame"><img src="${esc(d.invitationB)}" alt="דף ההזמנה"></div></div></figure>`);
+  if(pages.length){
+    parts.push(`<div class="reveal"><section class="fronts"><div class="fronts-wrap">${pages.join("")}</div></section></div>`);
+    parts.push(cue());
+  }
+
+  /* מועד, ספירה, מתחתנים */
+  const c = [];
+  if(has(d.dayLabel))      c.push(`<h2 class="date-day">${esc(d.dayLabel)}</h2>`);
+  if(has(d.hebrewDate))    c.push(`<p class="date-heb">${esc(d.hebrewDate)}</p>`);
+  if(has(d.gregorianDate)) c.push(`<p class="date-num">${esc(d.gregorianDate)}</p>`);
+  if(has(d.targetDate)){
+    if(has(d.countdownLabel)) c.push(`<p class="beod">${esc(d.countdownLabel)}</p>`);
+    /* בעברית הפריט הראשון יושב מימין — לכן שניות ראשונות וימים אחרונים */
+    const order = [["שניות",3],["דקות",2],["שעות",1],["ימים",0]];
+    c.push(`<div class="units" role="timer">${order.map(([l,i])=>
+      `<div class="unit"><div class="n" data-u="${i}">00</div><div class="l">${l}</div></div>`).join("")}</div>`);
+  }
+  if(has(d.marryingLine) || has(d.saveTheDate)){
+    c.push(`<div class="marry-block" id="marry">
+      ${has(d.marryingLine) ? `<p class="marry shimmer">${esc(d.marryingLine)}</p>` : ""}
+      ${has(d.saveTheDate)  ? `<p class="std" dir="ltr">${letters(d.saveTheDate)}</p>${sketch()}` : ""}
+      <canvas id="sparkles" aria-hidden="true"></canvas>
+    </div>`);
+  }
+  if(has(d.calendarLabel)) c.push(`<a class="btn btn-solid" style="margin-top:3rem" href="#">
+    <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg>
+    ${esc(d.calendarLabel)}</a>`);
+  if(c.length) parts.push(`<div class="reveal"><section class="count"><div class="count-in">${c.join("")}</div></section></div>`);
+
+  /* עיגולים */
+  const pin = `<svg class="ico ico-lg" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const clk = `<svg class="ico ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
+  const nav = `<svg class="ico ico-lg" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>`;
+  const circles = [
+    flip(d.whereQ, d.whereInfo, d.whereBtn, pin),
+    flip(d.whenQ,  d.whenInfo,  d.whenBtn,  clk),
+    flip(d.howQ,   d.howInfo,   d.howBtn,   nav),
+  ].filter(Boolean);
+  if(circles.length) parts.push(`<div class="reveal"><section class="info"><div class="info-grid">${circles.join("")}</div></section></div>`);
+
+  /* בלוק מאוחד מתחת לקופסאות המתהפכות:
+     המפריד עם היהלום, ברכת ההורים, ומיד אחריה "נשמח בהשתתפותכם". */
+  if(has(d.blessing) || has(d.hosts)){
+    const u = [];
+    u.push(`<div class="div-gem">
+      <span class="rule"></span>
+      <svg class="gem" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 3h12l4 6-10 12L2 9z"/>
+        <path d="M2 9h20M9.5 3 8 9l4 12M14.5 3 16 9l-4 12"/>
+      </svg>
+      <span class="rule"></span>
+    </div>`);
+    if(has(d.blessing)) u.push(`<p class="blessing">${nl(d.blessing)}</p>`);
+    if(has(d.hosts))    u.push(`<p class="hosts">${esc(d.hosts)}</p>`);
+
+
+    parts.push(`<div class="reveal"><section class="unite"><div class="unite-in">${u.join("")}</div></section></div>`);
+  }
+
+  if(has(d.greetTitle)){
+    parts.push(`<div class="reveal"><section class="greet"><div class="greet-in">
+      <div style="text-align:center">
+        <h2>${esc(d.greetTitle)}</h2>
+        ${has(d.greetSub) ? `<p class="sub">${esc(d.greetSub)}</p>` : ""}
+        <span class="rule" style="display:block;width:7rem;margin:1.4rem auto 0"></span>
+      </div>
+      <form id="gform" onsubmit="send(event)">
+        <div><label for="gn">השם שלכם</label><input id="gn" required></div>
+        <div><label for="gm">הברכה</label><textarea id="gm" rows="4" required></textarea></div>
+        <button type="submit" class="btn btn-solid">
+          <svg class="ico" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+          שליחת הברכה
+        </button>
+      </form>
+      <div class="sent" id="gsent" hidden>
+        <span class="mark"><svg class="ico" viewBox="0 0 24 24" style="width:1.6rem;height:1.6rem"><path d="m20 6-11 11-5-5"/></svg></span>
+        <p class="t">הברכה נשלחה, תודה רבה!</p>
+        <p class="s">מזל טוב ובשורות טובות</p>
+        <button class="again" onclick="reset2()">שליחת ברכה נוספת</button>
+      </div>
+    </div></section></div>`);
+  }
+
+  /* סיום — כפתור פנייה אלייך */
+  if(has(d.ctaText)){
+    const href = has(d.ctaEmail)
+      ? `mailto:${esc(d.ctaEmail)}?subject=${encodeURIComponent("רוצים הזמנה כזו")}`
+      : "#";
+    parts.push(`<footer><span class="rule"></span>
+      <a class="btn btn-outline cta" href="${href}">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="m22 7-10 6L2 7"/></svg>
+        ${esc(d.ctaText)}
+      </a></footer>`);
+  }
+
+  document.getElementById('app').innerHTML = parts.join("");
+  // כל רכיב עומד בפני עצמו — כשל באחד לא מבטל את השאר
+  [applyBackground, startCountdown, observeReveal, setupMusic, watchMarry, measure]
+    .forEach(fn => { try { fn(); } catch(err){ console.warn(fn.name, err); } });
+}
+
+/* קו מצויר ביד קלה — שלושה משיחות שנמתחות בזו אחר זו */
+function sketch(){
+  return `<div class="sketch-wrap"><svg class="sketch" viewBox="0 0 600 44" aria-hidden="true">
+    <path pathLength="1" d="M14 16 C 160 3, 430 5, 586 13" stroke-width="2.6" style="animation-delay:.85s"/>
+    <path pathLength="1" d="M58 28 C 210 19, 402 21, 528 26" stroke-width="1.8" opacity=".78" style="animation-delay:1.1s"/>
+    <path pathLength="1" d="M126 37 C 250 32, 372 32, 486 36" stroke-width="1.3" opacity=".52" style="animation-delay:1.32s"/>
+  </svg></div>`;
+}
+
+/* אותיות נפרדות ל-Save the date, לאנימציה אות-אחר-אות */
+function letters(t){
+  return Array.from(t).map((ch,i) =>
+    `<span style="animation-delay:${(i*0.075).toFixed(3)}s">${ch === " " ? "&nbsp;" : esc(ch)}</span>`).join("");
+}
+
+function flip(q, info, btn, icon){
+  if(!has(q)) return "";
+  const back = [];
+  if(has(info)) back.push(`<p class="bx">${nl(info)}</p>`);
+  if(has(btn))  back.push(`<a class="btn btn-solid" href="#">${esc(btn)}</a>`);
+  return `<div class="flip" tabindex="0" role="group" aria-label="${esc(q)} — ${esc(String(info||"").replace(/\n/g,", "))}">
+    <div class="flip-in">
+      <div class="face">${icon}<p class="q">${esc(q)}</p><span class="rule r"></span></div>
+      <div class="face back"><p class="bt">${esc(q)}</p>${back.join("")}</div>
+    </div></div>`;
+}
+
+function cue(){
+  return `<div class="cue"><button onclick="next(this)" aria-label="גלילה למטה">
+    <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button></div>`;
+}
+
+/* טקסט מעגלי — נקרא מימין לשמאל, ראש האותיות ישר למעלה והפוך למטה */
+function verseRing(text){
+  const R = 124, CX = 150, CY = 150;
+  const unit = text.trim() + "  ·  ";
+  const perChar = 11.4;
+  const target = Math.round((2 * Math.PI * R) / perChar);
+  let s = unit;
+  while (Array.from(s).length < target) s += unit;
+  const chars = Array.from(s).slice(0, target);
+
+  const n = chars.length, step = 360 / n;
+  const glyphs = chars.map((ch, i) => {
+    // מינוס: כל אות ממוקמת שמאלה מקודמתה — כיוון קריאה עברי
+    const deg = -90 - i * step;
+    const rad = deg * Math.PI / 180;
+    const x = (CX + R * Math.cos(rad)).toFixed(2);
+    const y = (CY + R * Math.sin(rad)).toFixed(2);
+    // deg+90: בראש העיגול הסיבוב 0 (ישר), בתחתית 180 (הפוך)
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" ` +
+           `transform="rotate(${(deg + 90).toFixed(2)} ${x} ${y})">${esc(ch === " " ? "\u00A0" : ch)}</text>`;
+  }).join("");
+
+  return `<svg class="verse-ring" viewBox="0 0 300 300" aria-hidden="true">
+    <circle cx="150" cy="150" r="141" fill="none" stroke="oklch(0.84 0.11 82 / .32)" stroke-width="0.4"/>
+    <circle cx="150" cy="150" r="106" fill="none" stroke="oklch(0.84 0.11 82 / .2)" stroke-width="0.3"/>
+    <g font-family="Assistant, sans-serif" font-size="11.5" font-weight="400"
+       fill="oklch(0.84 0.11 82 / .92)">${glyphs}</g>
+  </svg>`;
+}
+
+/* ================= גלילה חלקה ================= */
+const wrap = document.getElementById('smooth');
+let smoothOn = false, targetY = 0, currentY = 0;
+
+function measure(){
+  if(!smoothOn) return;
+  document.body.style.height = wrap.scrollHeight + "px";
+}
+
+function initSmooth(){
+  // רק במסכים גדולים עם עכבר — בנייד הגלילה הטבעית טובה יותר
+  if(reduced || !matchMedia("(min-width: 760px) and (pointer: fine)").matches) return;
+  smoothOn = true;
+  document.body.classList.add("smooth-on");
+  measure();
+  addEventListener("resize", measure);
+  const loop = () => {
+    // 0.042 = תנועה איטית ורכה מאוד. ערך גבוה יותר = מהיר וחד יותר.
+    currentY += (targetY - currentY) * 0.042;
+    if(Math.abs(targetY - currentY) < 0.05) currentY = targetY;
+    wrap.style.transform = `translate3d(0, ${-currentY.toFixed(2)}px, 0)`;
+    parallax();
+    requestAnimationFrame(loop);
+  };
+  addEventListener("scroll", () => { targetY = scrollY; }, {passive:true});
+  requestAnimationFrame(loop);
+}
+
+/* תזוזה עדינה של דפי ההזמנה בגלילה */
+function parallax(){
+  const mid = innerHeight / 2;
+  document.querySelectorAll('[data-par]').forEach(el => {
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2 - mid) * parseFloat(el.dataset.par);
+    el.style.transform = `translate3d(0, ${off.toFixed(1)}px, 0)`;
+  });
+}
+if(!smoothOn) addEventListener("scroll", () => { if(!smoothOn) parallax(); }, {passive:true});
+
+/* גלילה מונחית איטית לחץ */
+function next(btn){
+  const el = btn.closest('.cue').nextElementSibling;
+  if(!el) return;
+  const to = (smoothOn ? currentY : scrollY) + el.getBoundingClientRect().top;
+  glide(to, 2300);
+}
+function glide(to, ms){
+  const from = smoothOn ? targetY : scrollY, t0 = performance.now();
+  const max = document.body.scrollHeight - innerHeight;
+  const dest = Math.max(0, Math.min(to, max));
+  const ease = t => 1 - Math.pow(1 - t, 4);   // האטה ארוכה ורכה
+  const step = now => {
+    const p = Math.min(1, (now - t0) / ms);
+    scrollTo(0, from + (dest - from) * ease(p));
+    if(p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/* ================= ניצוצות זהב באזור השמות =================
+   חיים רק בתוך אזור "מוטי ונחמי מתחתנים", מהירים, מעטים ומנצנצים.
+   בגלילה מטה הם עולים מלמטה; בגלילה חזרה מעלה הם יורדים מלמעלה.
+   ============================================================ */
+let scrollDir = 1, lastY = 0;
+addEventListener("scroll", () => {
+  const y = smoothOn ? targetY : scrollY;
+  if(Math.abs(y - lastY) > 2){ scrollDir = y >= lastY ? 1 : -1; lastY = y; }
+}, {passive:true});
+
+const GOLDS = ["#F2DBA4","#E8C57A","#FBEFCB","#D8B15F","#FFF6DC"];
+let sparks = [], sparkLoop = null, sparkCv = null, sparkCtx = null;
+let sparkActive = false, sparkTimer = null;
+
+function sizeSparkles(){
+  if(!sparkCv) return;
+  const r = sparkCv.getBoundingClientRect();
+  if(!r.width || !r.height) return;
+  const dpr = devicePixelRatio || 1;
+  sparkCv.width = r.width * dpr;
+  sparkCv.height = r.height * dpr;
+  sparkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  sparkCv._w = r.width; sparkCv._h = r.height;
+}
+
+/* פולט רציף — נדלק בכניסה לאזור ונכבה ביציאה ממנו */
+function startSparkles(){
+  if(reduced || sparkActive) return;
+  sparkCv = document.getElementById('sparkles');
+  if(!sparkCv) return;
+  if(!sparkCtx) sparkCtx = sparkCv.getContext('2d');
+  if(!sparkCtx) return;
+  sizeSparkles();
+  if(!sparkCv._w || !sparkCv._h) return;
+
+  sparkActive = true;
+  const emit = () => {
+    if(!sparkActive) return;
+    const W = sparkCv._w, H = sparkCv._h;
+    const dir = scrollDir;
+    for(let i = 0; i < 2; i++){
+      sparks.push({
+        x: Math.random() * W,
+        y: dir === 1 ? H + 14 : -14,
+        v: (2.3 + Math.random() * 1.6) * (dir === 1 ? -1 : 1),
+        vx: (Math.random() - .5) * 0.9,
+        size: 3.5 + Math.random() * 5,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - .5) * 0.09,
+        tw: Math.random() * Math.PI * 2,
+        tws: 0.13 + Math.random() * 0.16,
+        color: GOLDS[(Math.random() * GOLDS.length) | 0],
+        life: 0,
+        max: 95 + Math.random() * 55,
+      });
+    }
+    sparkTimer = setTimeout(emit, 140);
+  };
+  emit();
+  if(!sparkLoop) sparkLoop = requestAnimationFrame(drawSparkles);
+}
+
+function stopSparkles(){
+  sparkActive = false;
+  clearTimeout(sparkTimer);   // הקיימים ימשיכו לרחף עד שיכבו מעצמם
+}
+
+function drawSparkles(){
+  if(!sparkCv || !sparkCtx){ sparkLoop = null; sparks = []; return; }
+  const W = sparkCv._w, H = sparkCv._h;
+  sparkCtx.clearRect(0, 0, W, H);
+  sparks = sparks.filter(p => p.life < p.max && p.y > -40 && p.y < H + 40);
+  sparks.forEach(p => {
+    p.life++; p.tw += p.tws;
+    p.x += p.vx; p.y += p.v; p.rot += p.vr;
+    const inOut = p.life < 12 ? p.life / 12
+                : p.life > p.max - 30 ? (p.max - p.life) / 30 : 1;
+    const a = Math.max(0, inOut) * (0.45 + 0.55 * Math.abs(Math.sin(p.tw)));
+    const sz = p.size * (0.55 + 0.45 * Math.abs(Math.sin(p.tw)));
+    sparkCtx.save();
+    sparkCtx.translate(p.x, p.y);
+    sparkCtx.rotate(p.rot);
+    sparkCtx.fillStyle = p.color;
+    sparkCtx.shadowColor = p.color;
+    sparkCtx.shadowBlur = 10;
+    sparkCtx.globalAlpha = a;
+    sparkCtx.beginPath();
+    sparkCtx.moveTo(0, -sz); sparkCtx.lineTo(sz * .34, 0);
+    sparkCtx.lineTo(0, sz);  sparkCtx.lineTo(-sz * .34, 0);
+    sparkCtx.closePath(); sparkCtx.fill();
+    sparkCtx.globalAlpha = a * .75;
+    sparkCtx.beginPath();
+    sparkCtx.moveTo(-sz, 0); sparkCtx.lineTo(0, -sz * .34);
+    sparkCtx.lineTo(sz, 0);  sparkCtx.lineTo(0, sz * .34);
+    sparkCtx.closePath(); sparkCtx.fill();
+    sparkCtx.restore();
+  });
+  if(sparks.length || sparkActive){ sparkLoop = requestAnimationFrame(drawSparkles); }
+  else { sparkCtx.clearRect(0, 0, W, H); sparkLoop = null; }
+}
+
+function watchMarry(){
+  const el = document.getElementById('marry');
+  if(!el) return;
+  addEventListener("resize", sizeSparkles);
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => e.isIntersecting ? startSparkles() : stopSparkles());
+  }, {threshold: 0.2});
+  io.observe(el);
+}
+
+/* ================= שאר ההתנהגות ================= */
+let timer = null;
+function startCountdown(){
+  clearInterval(timer);
+  const cells = document.querySelectorAll('[data-u]');
+  if(!cells.length || !has(data.targetDate)) return;
+  const target = new Date(data.targetDate).getTime();
+  if(Number.isNaN(target)) return;
+  const p = n => String(n).padStart(2,'0');
+  const tick = () => {
+    const ms = Math.max(0, target - Date.now());
+    const v = [Math.floor(ms/86400000), Math.floor(ms/3600000)%24, Math.floor(ms/60000)%60, Math.floor(ms/1000)%60];
+    cells.forEach(el => el.textContent = p(v[+el.dataset.u]));
+  };
+  tick(); timer = setInterval(tick, 1000);
+}
+
+function observeReveal(){
+  const io = new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.dataset.visible="true"; io.unobserve(e.target);} });
+  },{threshold:.08, rootMargin:"0px 0px -6% 0px"});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+}
+
+function applyBackground(){
+  const photo = document.getElementById('photo'), sky = document.getElementById('sky');
+  if(has(data.backgroundImage)){
+    photo.style.backgroundImage = `url(${data.backgroundImage})`;
+    sky.classList.add('over');
+    document.documentElement.style.setProperty('--tint', (data.backgroundTint/100).toFixed(2));
+  } else {
+    photo.style.backgroundImage = "";
+    sky.classList.remove('over');
+  }
+}
+
+const audio = document.getElementById('audio'), mt = document.getElementById('mtoggle');
+let playing = false, musicAsked = false;
+
+function setupMusic(){
+  if(!has(data.musicUrl)){ mt.hidden = true; document.getElementById('dialog').hidden = true; return; }
+  if(audio.src !== data.musicUrl) audio.src = data.musicUrl;
+  if(!musicAsked){
+    musicAsked = true;
+    setTimeout(()=>{ document.getElementById('dialog').hidden = false; }, 900);
+  }
+}
+function choose(on){ document.getElementById('dialog').hidden = true; mt.hidden = false; setMusic(on); }
+function setMusic(on){
+  playing = on; audio.muted = !on;
+  on ? audio.play().catch(()=>{}) : audio.pause();
+  mt.dataset.on = String(on);
+  mt.setAttribute('aria-pressed', String(on));
+  mt.setAttribute('aria-label', on ? 'השתקת המוזיקה' : 'הפעלת המוזיקה');
+  document.getElementById('micon').innerHTML = on
+    ? '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/>'
+    : '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6M16 9l6 6"/>';
+}
+mt.addEventListener('click', ()=> setMusic(!playing));
+
+function send(e){
+  e.preventDefault();
+  const n = document.getElementById('gn'), m = document.getElementById('gm');
+  if(!n.value.trim() || !m.value.trim()) return;
+  const btn = e.target.querySelector('button[type="submit"]');
+  if(btn) btn.disabled = true;
+  fetch('/api/rsvp', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      slug: (window.CLIENT_SLUG || ''),
+      name: n.value.trim(),
+      message: m.value.trim()
+    })
+  }).then(r => { if(!r.ok) throw new Error('bad response'); return r.json(); })
+    .then(() => {
+      document.getElementById('gform').hidden = true;
+      document.getElementById('gsent').hidden = false;
+    })
+    .catch(() => {
+      if(btn) btn.disabled = false;
+      alert('משהו השתבש בשליחת הברכה, נסו שוב בבקשה');
+    });
+}
+function reset2(){
+  document.getElementById('gform').reset();
+  document.getElementById('gform').hidden = false;
+  document.getElementById('gsent').hidden = true;
+}
+
+/* ===== בוקה ===== */
+(function(){
+  const svg = document.getElementById('bokeh'), W = 1200, H = 900, NS = "http://www.w3.org/2000/svg";
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const defs = document.createElementNS(NS,'defs');
+  defs.innerHTML = `
+    <radialGradient id="b1"><stop offset="0%" stop-color="oklch(0.9 0.13 82)" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="oklch(0.9 0.13 82)" stop-opacity="0"/></radialGradient>
+    <radialGradient id="b2"><stop offset="0%" stop-color="oklch(0.82 0.10 300)" stop-opacity=".7"/>
+      <stop offset="100%" stop-color="oklch(0.82 0.10 300)" stop-opacity="0"/></radialGradient>`;
+  svg.appendChild(defs);
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  for(let i=0;i<56;i++){
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('cx',(rnd()*W).toFixed(1)); c.setAttribute('cy',(rnd()*H).toFixed(1));
+    c.setAttribute('r',(6 + rnd()*46).toFixed(1));
+    c.setAttribute('fill', `url(#b${rnd() > .32 ? 1 : 2})`);
+    c.style.animationDelay = (rnd()*7).toFixed(2)+'s';
+    c.style.animationDuration = (5 + rnd()*6).toFixed(2)+'s';
+    svg.appendChild(c);
+  }
+})();
+
+/* ================= נצנוץ בעקבות העכבר — במסך הפתיחה בלבד =================
+   הקנבס קבוע וגודלו כגודל החלון, ולכן מיקום העכבר הוא גם מיקום הציור.
+   ההזנקה מותנית בכך שהסמן נמצא בגבולות מסך הפתיחה.
+   ========================================================================= */
+let trailCtx = null, trail = [], trailLoop = null;
+let lastSpawn = 0, lastPx = null, lastPy = null, moved = 0;
+
+function sizeTrail(){
+  const cv = document.getElementById('trail');
+  if(!cv) return;
+  if(!trailCtx) trailCtx = cv.getContext('2d');
+  const dpr = devicePixelRatio || 1;
+  cv.width = innerWidth * dpr;
+  cv.height = innerHeight * dpr;
+  cv.style.width = innerWidth + "px";
+  cv.style.height = innerHeight + "px";
+  trailCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function initTrail(){
+  sizeTrail();
+  addEventListener("resize", sizeTrail);
+
+  document.addEventListener("pointermove", e => {
+    const hero = document.querySelector('.hero');
+    if(!hero) return;
+    const h = hero.getBoundingClientRect();
+    if(e.clientY < h.top || e.clientY > h.bottom || h.bottom <= 0) return;
+
+    // צוברים מרחק תנועה — כך הפיזור נולד מתוך התנועה עצמה
+    if(lastPx !== null){
+      moved += Math.hypot(e.clientX - lastPx, e.clientY - lastPy);
+    }
+    lastPx = e.clientX; lastPy = e.clientY;
+
+    const now = performance.now();
+    // מרווח נדיב, ורק אחרי תנועה של ממש — לא שובל צמוד
+    if(moved < 55 || now - lastSpawn < 110) return;
+    moved = 0; lastSpawn = now;
+
+    if(!trailCtx) sizeTrail();
+    if(!trailCtx) return;
+    if(trail.length > 90) return;
+
+    const count = reduced ? 1 : (1 + (Math.random() < .5 ? 1 : 0));
+    for(let i = 0; i < count; i++){
+      // פיזור באזור העכבר, לא בנקודה שלו
+      const ang = Math.random() * Math.PI * 2;
+      const rad = 25 + Math.random() * 95;
+      const drift = Math.random() * Math.PI * 2;
+      trail.push({
+        x: e.clientX + Math.cos(ang) * rad,
+        y: e.clientY + Math.sin(ang) * rad * .75,
+        vx: Math.cos(drift) * 0.14,
+        vy: Math.sin(drift) * 0.1 - 0.06,   // נטייה עדינה כלפי מעלה
+        size: 3 + Math.random() * 4.5,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - .5) * 0.035,
+        sway: Math.random() * Math.PI * 2,
+        sways: 0.006 + Math.random() * 0.01,
+        tw: Math.random() * Math.PI * 2,
+        tws: 0.045 + Math.random() * 0.05,  // נצנוץ איטי
+        color: GOLDS[(Math.random() * GOLDS.length) | 0],
+        life: 0,
+        max: 150 + Math.random() * 120,     // נשארים 2.5–4.5 שניות
+      });
+    }
+    if(!trailLoop) trailLoop = requestAnimationFrame(drawTrail);
+  }, {passive:true});
+}
+
+function drawTrail(){
+  if(!trailCtx){ trailLoop = null; trail = []; return; }
+  trailCtx.clearRect(0, 0, innerWidth, innerHeight);
+  trail = trail.filter(p => p.life < p.max);
+  trail.forEach(p => {
+    p.life++;
+    p.tw += p.tws;
+    p.sway += p.sways;
+    p.x += p.vx + Math.sin(p.sway) * 0.22;   // ריחוף רך
+    p.y += p.vy + Math.cos(p.sway * .8) * 0.16;
+    p.rot += p.vr;
+
+    const t = p.life / p.max;
+    // עולה לאט, מחזיק, ואז מתמוגג
+    const fade = t < .18 ? t / .18 : t > .55 ? (1 - t) / .45 : 1;
+    const a = Math.max(0, fade) * (0.35 + 0.65 * Math.abs(Math.sin(p.tw)));
+    const sz = p.size * (0.55 + 0.45 * Math.abs(Math.sin(p.tw))) * (0.75 + 0.25 * fade);
+
+    trailCtx.save();
+    trailCtx.translate(p.x, p.y);
+    trailCtx.rotate(p.rot);
+    trailCtx.fillStyle = p.color;
+    trailCtx.shadowColor = p.color;
+    trailCtx.shadowBlur = 12;
+    trailCtx.globalAlpha = a;
+    trailCtx.beginPath();
+    trailCtx.moveTo(0, -sz); trailCtx.lineTo(sz * .3, 0);
+    trailCtx.lineTo(0, sz);  trailCtx.lineTo(-sz * .3, 0);
+    trailCtx.closePath(); trailCtx.fill();
+    trailCtx.globalAlpha = a * .65;
+    trailCtx.beginPath();
+    trailCtx.moveTo(-sz, 0); trailCtx.lineTo(0, -sz * .3);
+    trailCtx.lineTo(sz, 0);  trailCtx.lineTo(0, sz * .3);
+    trailCtx.closePath(); trailCtx.fill();
+    trailCtx.restore();
+  });
+  if(trail.length){ trailLoop = requestAnimationFrame(drawTrail); }
+  else { trailCtx.clearRect(0, 0, innerWidth, innerHeight); trailLoop = null; }
+}
+
+/* ================= גלילה אוטומטית אחרי 7 שניות ללא תנועה ================= */
+let idleTimer = null, autoScrolled = false;
+
+function armIdle(){
+  if(autoScrolled) return;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if(autoScrolled) return;
+    // לא גוללים כשפופ-אפ המוזיקה עדיין פתוח
+    const dlg = document.getElementById('dialog');
+    if(dlg && !dlg.hidden){ armIdle(); return; }
+    const y = smoothOn ? targetY : scrollY;
+    if(y > innerHeight * 0.3) return;       // רק אם עדיין במסך הפתיחה
+    const first = document.querySelector('.cue');
+    const el = first && first.nextElementSibling;
+    if(!el) return;
+    autoScrolled = true;
+    glide(y + el.getBoundingClientRect().top, 2900);
+  }, 7000);
+}
+
+["pointermove","pointerdown","keydown","wheel","touchstart","scroll"].forEach(ev =>
+  addEventListener(ev, armIdle, {passive:true}));
+
+
+initTrail();          // ראשון — כדי שלא יהיה תלוי בשום דבר אחר
+try { render(); } catch(err){ console.error("render", err); }
+try { initSmooth(); } catch(err){ console.warn("initSmooth", err); }
+armIdle();
+addEventListener("load", measure);
+</script>
+</body>
+</html>
