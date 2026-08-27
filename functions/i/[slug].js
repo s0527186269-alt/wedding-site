@@ -23,14 +23,14 @@ export async function onRequestGet({ params, env, request }) {
   const tplRes = await fetch(origin + "/hazmana.html");
   let html = await tplRes.text();
 
-  // מזריקים את הנתונים של הלקוח הזה במקום הנתונים ברירת המחדל שבתבנית
-  html = html.replace(
-    /\/\*__DATA_START__\*\/[\s\S]*?\/\*__DATA_END__\*\//,
-    "const data = " + JSON.stringify(data) + ";"
-  );
+  // מזריקים את הנתונים של הלקוח הזה במקום הנתונים ברירת המחדל שבתבנית.
+  // הפונקציה כתחליף (ולא מחרוזת) — אחרת תו $ בטקסט של הלקוח יפורש כהוראה מיוחדת.
+  const payload = "const data = " + JSON.stringify(data) + ";";
+  html = html.replace(/\/\*__DATA_START__\*\/[\s\S]*?\/\*__DATA_END__\*\//, () => payload);
 
   // מודיעים לדף מה ה-slug שלו, כדי שטופס הברכות ידע לאן לשלוח
-  html = html.replace("<script>", `<script>window.CLIENT_SLUG=${JSON.stringify(slug)};`);
+  const head = `<script>window.CLIENT_SLUG=${JSON.stringify(slug)};`;
+  html = html.replace("<script>", () => head);
 
   return new Response(html, {
     headers: { "content-type": "text/html; charset=utf-8" },

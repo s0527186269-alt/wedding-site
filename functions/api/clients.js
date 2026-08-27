@@ -33,6 +33,11 @@ export async function onRequestPost({ request, env }) {
   const slug = String(client.__slug || "").trim();
   if (!slug) return json({ error: "missing slug" }, 400);
 
+  // אם הכתובת שונתה בפאנל, prevSlug מחזיק את הכתובת שתחתיה השורה נשמרה קודם
+  const prev = String(client.__prevSlug || "").trim();
+  delete client.__prevSlug;
+  delete client.__saved;
+
   await env.DB.prepare(
     `INSERT INTO clients (slug, name, published, data, updated_at)
      VALUES (?1, ?2, ?3, ?4, ?5)
@@ -48,5 +53,11 @@ export async function onRequestPost({ request, env }) {
     )
     .run();
 
-  return json({ ok: true });
+  if (prev && prev !== slug) {
+    // הברכות שכבר התקבלו עוברות לכתובת החדשה, והשורה הישנה נמחקת
+    await env.DB.prepare("UPDATE guests SET slug = ?1 WHERE slug = ?2").bind(slug, prev).run();
+    await env.DB.prepare("DELETE FROM clients WHERE slug = ?1").bind(prev).run();
+  }
+
+  return json({ ok: true, slug });
 }
