@@ -105,6 +105,14 @@ main{position:relative;z-index:1}
   animation:nudge 3.2s ease-in-out infinite;box-shadow:0 10px 30px -12px oklch(0 0 0 / .7)}
 .cue .ico{width:1.35rem;height:1.35rem}
 
+/* חץ ההמשך של מסך הפתיחה — מקובע לתחתית המסך הנראה, בלי קשר לגובה
+   התוכן שמעליו. כך הוא תמיד גלוי, גם במסכים נמוכים או במונוגרמה גדולה,
+   ונעלם אוטומטית ברגע שמסך הפתיחה יוצא מהתצוגה. */
+.cue-hero{position:fixed;inset-inline:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.1rem);
+  padding:0;z-index:30;pointer-events:none;opacity:1;transition:opacity .5s ease}
+.cue-hero.cue-hidden{opacity:0}
+.cue-hero button{pointer-events:auto}
+
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.7rem;cursor:pointer;
   border-radius:9999px;text-decoration:none;font-family:var(--head);
   font-size:1.2rem;font-weight:700;padding:1.05rem 2.4rem;border:1px solid transparent;
@@ -326,6 +334,7 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
   .hero{padding-top:4rem}
   .cue{padding:1rem 0 0}
   .cue button{width:2.6rem;height:2.6rem}
+  .cue-hero{bottom:calc(env(safe-area-inset-bottom,0px) + .85rem)}
   .marry-block{margin-top:3.25rem}
   .beod{margin-top:2.25rem}
   .unite .blessing{margin-top:2.25rem}
@@ -464,7 +473,7 @@ function render(){
     <div class="inner-ring breathe"></div>
     <div class="hero-in">${monogram}</div>
   </div></section>`);
-  parts.push(cue());
+  // חץ ההמשך של מסך הפתיחה ממוקם בנפרד ומחוץ לזרימת הדף — ראו initHeroCue()
 
   /* דפי ההזמנה — ממוקמים קבוע, בלי תזוזה בגלילה */
   const pages = [];
@@ -686,6 +695,37 @@ function saveIcs(){
 function cue(){
   return `<div class="cue"><button onclick="next(this)" aria-label="גלילה למטה">
     <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button></div>`;
+}
+
+// גלילה מהמקום הנוכחי אל האלמנט הבא אחרי מסך הפתיחה
+function scrollPastHero(){
+  const hero = document.querySelector('.hero');
+  const target = hero && hero.nextElementSibling;
+  if(!target) return;
+  const to = (smoothOn ? currentY : scrollY) + target.getBoundingClientRect().top;
+  glide(to, 2300);
+}
+
+// חץ ההמשך של מסך הפתיחה בלבד — מצורף ישירות ל-body ולא לתוך #smooth,
+// כי ל-#smooth מוצמד transform לצורך אפקט הגלילה החלקה, ואלמנט
+// position:fixed בתוך צאצא כזה נהיה קבוע ביחס אליו ולא ביחס למסך.
+// כך הכפתור נשאר תמיד בתחתית המסך הנראה, בלי קשר לגובה המונוגרמה
+// או הפסוק, ובלי קשר לגודל המסך. הוא נעלם אוטומטית כשגוללים הלאה.
+function initHeroCue(){
+  const hero = document.querySelector('.hero');
+  if(!hero || document.getElementById('heroCue')) return;
+
+  const el = document.createElement('div');
+  el.id = 'heroCue';
+  el.className = 'cue cue-hero';
+  el.innerHTML = `<button onclick="scrollPastHero()" aria-label="גלילה למטה">
+    <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>`;
+  document.body.appendChild(el);
+
+  if(!('IntersectionObserver' in window)) return; // ללא תמיכה — נשאר גלוי קבוע, עדיין שימושי
+  new IntersectionObserver(([entry]) => {
+    el.classList.toggle('cue-hidden', !entry.isIntersecting);
+  }, { threshold: 0.2 }).observe(hero);
 }
 
 /* טקסט מעגלי — נקרא מימין לשמאל, ראש האותיות ישר למעלה והפוך למטה */
@@ -1198,6 +1238,7 @@ function armIdle(){
 initTrail();          // ראשון — כדי שלא יהיה תלוי בשום דבר אחר
 try { render(); } catch(err){ console.error("render", err); }
 try { initMonogram(); } catch(err){ console.warn("initMonogram", err); }
+try { initHeroCue(); } catch(err){ console.warn("initHeroCue", err); }
 try { initSmooth(); } catch(err){ console.warn("initSmooth", err); }
 armIdle();
 addEventListener("load", measure);
