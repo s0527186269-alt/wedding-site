@@ -710,7 +710,7 @@ function scrollPastHero(){
 // כי ל-#smooth מוצמד transform לצורך אפקט הגלילה החלקה, ואלמנט
 // position:fixed בתוך צאצא כזה נהיה קבוע ביחס אליו ולא ביחס למסך.
 // כך הכפתור נשאר תמיד בתחתית המסך הנראה, בלי קשר לגובה המונוגרמה
-// או הפסוק, ובלי קשר לגודל המסך. הוא נעלם אוטומטית כשגוללים הלאה.
+// או הפסוק, ובלי קשר לגודל המסך.
 function initHeroCue(){
   const hero = document.querySelector('.hero');
   if(!hero || document.getElementById('heroCue')) return;
@@ -722,10 +722,16 @@ function initHeroCue(){
     <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>`;
   document.body.appendChild(el);
 
-  if(!('IntersectionObserver' in window)) return; // ללא תמיכה — נשאר גלוי קבוע, עדיין שימושי
-  new IntersectionObserver(([entry]) => {
-    el.classList.toggle('cue-hidden', !entry.isIntersecting);
-  }, { threshold: 0.2 }).observe(hero);
+  // נעלם ברגע שהגלילה מתחילה בפועל — לא מחכים שמסך הפתיחה כולו יעבור.
+  // scrollY הוא האות המיידי ביותר: הוא זז כבר בפריים הראשון של גלילה,
+  // גם בגלילה טבעית וגם כשהכפתור עצמו מפעיל את glide().
+  let hidden = false;
+  const sync = () => {
+    const past = scrollY > 2;
+    if(past !== hidden){ hidden = past; el.classList.toggle('cue-hidden', hidden); }
+  };
+  addEventListener('scroll', sync, { passive: true });
+  sync();
 }
 
 /* טקסט מעגלי — נקרא מימין לשמאל, ראש האותיות ישר למעלה והפוך למטה */
