@@ -576,16 +576,43 @@ function cue(){
 }
 
 /* טקסט מעגלי — נקרא מימין לשמאל, ראש האותיות ישר למעלה והפוך למטה */
+
+// כל אות ממוקמת לבד, ולכן הדפדפן לא מסדר עבורנו כיוונים מעורבים.
+// ספרות ואותיות לועזיות נקראות משמאל לימין גם בתוך משפט עברי,
+// ולכן הופכים כל רצף כזה כדי שיישאר קריא בסריקה הימנית-שמאלית.
+const MIRROR = { "(": ")", ")": "(", "[": "]", "]": "[", "{": "}", "}": "{", "<": ">", ">": "<" };
+function visualOrder(chars){
+  const isLtr = c => /[A-Za-z0-9]/.test(c);
+  const out = [];
+  for (let i = 0; i < chars.length; i++){
+    if (!isLtr(chars[i])){
+      out.push(MIRROR[chars[i]] || chars[i]);
+      continue;
+    }
+    let j = i;
+    while (j < chars.length && isLtr(chars[j])) j++;
+    // רצף לועזי: נדחף הפוך, כך שבסריקה מימין לשמאל הוא ייקרא כסדרו
+    for (let k = j - 1; k >= i; k--) out.push(chars[k]);
+    i = j - 1;
+  }
+  return out;
+}
+
 function verseRing(text){
   const R = 124, CX = 150, CY = 150;
   const unit = text.trim() + "  ·  ";
-  const perChar = 11.4;
-  const target = Math.round((2 * Math.PI * R) / perChar);
-  let s = unit;
-  while (Array.from(s).length < target) s += unit;
-  const chars = Array.from(s).slice(0, target);
+  const unitChars = Array.from(unit);
+  const circumference = 2 * Math.PI * R;
+
+  // מתאימים את הטקסט למעגל במקום לחתוך אותו: חוזרים על הפסוק מספר שלם
+  // של פעמים כדי שהסגירה תהיה חלקה, ומקטינים את הגופן כדי שהכל ייכנס.
+  const IDEAL_PER_CHAR = 11.4;
+  const reps = Math.max(1, Math.round(circumference / (unitChars.length * IDEAL_PER_CHAR)));
+  const chars = visualOrder(Array.from(unit.repeat(reps)));
 
   const n = chars.length, step = 360 / n;
+  const arcPerChar = circumference / n;
+  const fontSize = Math.max(5.5, Math.min(12.5, arcPerChar * 1.01)).toFixed(2);
   const glyphs = chars.map((ch, i) => {
     // מינוס: כל אות ממוקמת שמאלה מקודמתה — כיוון קריאה עברי
     const deg = -90 - i * step;
@@ -600,7 +627,7 @@ function verseRing(text){
   return `<svg class="verse-ring" viewBox="0 0 300 300" aria-hidden="true">
     <circle cx="150" cy="150" r="141" fill="none" stroke="oklch(0.84 0.11 82 / .32)" stroke-width="0.4"/>
     <circle cx="150" cy="150" r="106" fill="none" stroke="oklch(0.84 0.11 82 / .2)" stroke-width="0.3"/>
-    <g font-family="Assistant, sans-serif" font-size="11.5" font-weight="400"
+    <g font-family="Assistant, sans-serif" font-size="${fontSize}" font-weight="400"
        fill="oklch(0.84 0.11 82 / .92)">${glyphs}</g>
   </svg>`;
 }
