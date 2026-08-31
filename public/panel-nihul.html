@@ -177,10 +177,10 @@ const blank = (slug, name) => ({
   countdownLabel: "בעוד:", targetDate: "",
   marryingLine: "", saveTheDate: "Save the date!",
   blessing: "", hosts: "", calendarLabel: "שמרו ביומן",
-  whereQ: "איפה", whereInfo: "", whereBtn: "פתיחת מפה",
+  whereQ: "איפה", whereInfo: "", whereBtn: "פתיחת מפה", mapAddress: "",
   whenQ: "מתי", whenInfo: "", whenBtn: "שמרו ביומן",
   howQ: "איך מגיעים", howInfo: "", howBtn: "פתיחת Waze",
-  greetTitle: "ברכות ואיחולים", greetSub: "",
+  greetTitle: "ברכות ואיחולים", greetSub: "", notifyEmail: "",
   ctaText: "רוצים גם הזמנה כזו?", ctaEmail: "",
   musicUrl: "",
 });
@@ -277,11 +277,78 @@ async function loadGuests(){
     if(r.status === 401){ if(askKey()) return loadGuests(); return; }
     if(!r.ok) throw new Error("bad status");
     const list = await r.json();
-    if(!list.length){ alert("עדיין לא התקבלו ברכות מאורחים עבור " + c.__name); return; }
-    alert(list.map(g => `${g.name}:\n${g.message}`).join("\n\n———\n\n"));
+    if(!list.length){ flash("עדיין לא התקבלו ברכות עבור " + c.__name); return; }
+    showGuests(c, list);
   }catch(e){
     flash("לא הצלחתי לטעון את הברכות");
   }
+}
+
+// תאריך קריא בעברית; אם הערך פגום מציגים אותו כמו שהוא ולא שוברים את הדף
+function niceDate(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return String(iso || "");
+  const p = n => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/* עמוד ברכות להדפסה — נפתח בחלון נפרד, מעוצב לנייר A4 */
+function showGuests(c, list){
+  const w = window.open("", "_blank");
+  if(!w){ flash("הדפדפן חסם את החלון. אפשרי חלונות קופצים לאתר ונסי שוב."); return; }
+
+  const rows = list.map(g => `<article>
+      <header><h2>${esc(g.name)}</h2><time>${esc(niceDate(g.created_at))}</time></header>
+      <p>${esc(g.message).replace(/\n/g, "<br>")}</p>
+    </article>`).join("");
+
+  const plain = list.map(g => `${g.name} — ${niceDate(g.created_at)}\n${g.message}`).join("\n\n———\n\n");
+
+  w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+<title>ברכות — ${esc(c.__name)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem 1.5rem;background:#f6f4f0;color:#1c1a24;
+    font:16px/1.65 "Assistant","Segoe UI",system-ui,sans-serif}
+  .sheet{max-width:46rem;margin:0 auto}
+  h1{font-size:1.5rem;margin:0 0 .25rem}
+  .sub{color:#6b6577;font-size:.9rem;margin:0 0 1.5rem}
+  .bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.75rem}
+  button{font:inherit;font-size:.9rem;cursor:pointer;border:1px solid #c9c3d4;
+    background:#fff;color:#1c1a24;border-radius:.4rem;padding:.5rem .95rem}
+  button:hover{border-color:#8a7fb0}
+  article{background:#fff;border:1px solid #e2ddea;border-radius:.5rem;
+    padding:1rem 1.15rem;margin-bottom:.9rem;break-inside:avoid}
+  header{display:flex;justify-content:space-between;align-items:baseline;
+    gap:1rem;margin-bottom:.4rem}
+  h2{font-size:1.02rem;margin:0}
+  time{color:#7a7488;font-size:.8rem;white-space:nowrap}
+  p{margin:0;white-space:pre-wrap}
+  @media print{
+    body{background:#fff;padding:0}
+    .bar{display:none}
+    article{border-color:#ccc;box-shadow:none}
+  }
+</style></head><body><div class="sheet">
+  <h1>ברכות ואיחולים — ${esc(c.__name)}</h1>
+  <p class="sub">${list.length} ברכות · הופק ב-${esc(niceDate(new Date().toISOString()))}</p>
+  <div class="bar">
+    <button onclick="print()">הדפסה / שמירה כ-PDF</button>
+    <button onclick="dl()">הורדה כקובץ טקסט</button>
+  </div>
+  ${rows}
+</div>
+<script>
+  var TXT = ${JSON.stringify(plain)};
+  var NAME = ${JSON.stringify("ברכות - " + c.__name + ".txt")};
+  function dl(){
+    var b = new Blob([TXT], {type:"text/plain;charset=utf-8"});
+    var u = URL.createObjectURL(b), a = document.createElement("a");
+    a.href = u; a.download = NAME; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+  }
+<\/script></body></html>`);
+  w.document.close();
 }
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -521,15 +588,17 @@ function renderEditor(){
       F("שורה באנגלית","saveTheDate","בפונט מתגלגל, עם אנימציה אות-אחר-אות"))}
 
     ${SEC("שלושת העיגולים",
-      F("שאלה 1","whereQ","הצד הגלוי — רק השאלה") + F("מידע 1 (בגב)","whereInfo",null,3) + F("כפתור 1","whereBtn") +
+      F("שאלה 1","whereQ","הצד הגלוי — רק השאלה") + F("מידע 1 (בגב)","whereInfo",null,3) + F("כפתור 1","whereBtn","פותח מפה בכתובת שלמטה") +
+      F("כתובת לניווט","mapAddress","משמשת גם ל\"פתיחת מפה\" וגם ל-Waze. אם ריק — נלקחת השורה האחרונה של \"מידע 1\".") +
       `<hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">` +
-      F("שאלה 2","whenQ") + F("מידע 2 (בגב)","whenInfo",null,3) + F("כפתור 2","whenBtn") +
+      F("שאלה 2","whenQ") + F("מידע 2 (בגב)","whenInfo",null,3) + F("כפתור 2","whenBtn","מוריד קובץ יומן לפי \"תאריך היעד\". בלי תאריך תקין הכפתור לא יוצג.") +
       `<hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">` +
-      F("שאלה 3","howQ") + F("מידע 3 (בגב)","howInfo",null,3) + F("כפתור 3","howBtn"))}
+      F("שאלה 3","howQ") + F("מידע 3 (בגב)","howInfo",null,3) + F("כפתור 3","howBtn","פותח ניווט ב-Waze לכתובת שלמעלה"))}
 
     ${SEC("ברכות מהאורחים",
       F("כותרת הסקשן","greetTitle","אם ריק — סקשן הברכות לא מוצג") +
-      F("תת-כותרת","greetSub"))}
+      F("תת-כותרת","greetSub") +
+      F("התראה במייל","notifyEmail","כל ברכה חדשה תישלח לכתובת הזו — למשל המייל של הזוג. אם ריק — נשלח לכתובת ברירת המחדל שהוגדרה ב-Cloudflare."))}
 
     ${SEC("כפתור הסיום — פנייה אלייך",
       F("טקסט הכפתור","ctaText","מופיע בתחתית ההזמנה במקום שורת הסיום") +
