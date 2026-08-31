@@ -125,6 +125,33 @@ main{position:relative;z-index:1}
 .hero-in{position:relative;z-index:2;max-width:66%;display:flex;align-items:center;justify-content:center}
 .mono-img{display:block;width:min(48vw,19rem);max-height:min(38vh,17rem);
   object-fit:contain;filter:drop-shadow(0 14px 34px oklch(0 0 0 / .55))}
+
+/* ===== גוון והברקה של המונוגרמה =====
+   הצבע נלקח מ---gold, בדיוק כמו הפסוק המסתובב. התמונה משמשת כסטנסיל (mask)
+   והצבע מגיע מהרקע שמתחתיה, כך שאפשר להעביר לאורכה הברקה נעה.
+   דורש רקע שקוף; אם התמונה אטומה, נשארת ההברקה בלבד (ראו initMonogram). */
+.mono-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.mono-wrap.tinted .mono-img{visibility:hidden}
+.mono-tint{position:absolute;inset:0;pointer-events:none;
+  -webkit-mask-image:var(--mono-src);mask-image:var(--mono-src);
+  -webkit-mask-size:contain;mask-size:contain;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center;mask-position:center;
+  background:linear-gradient(115deg,
+    var(--gold-deep) 0%, var(--gold) 30%, oklch(0.97 0.055 92) 46%,
+    oklch(0.99 0.03 95) 50%, oklch(0.97 0.055 92) 54%, var(--gold) 70%, var(--gold-deep) 100%);
+  background-size:300% 100%;background-position:0 0;
+  filter:drop-shadow(0 14px 34px oklch(0 0 0 / .55));
+  animation:monoSheen 7s ease-in-out 1.2s infinite, monoGlow 5.5s ease-in-out infinite}
+@keyframes monoSheen{
+  0%{background-position:150% 0}
+  55%,100%{background-position:-150% 0}}
+/* נצנוץ רך — פועל גם על מונוגרמה אטומה שאי אפשר לצבוע */
+@keyframes monoGlow{
+  0%,100%{filter:drop-shadow(0 14px 34px oklch(0 0 0 / .55))}
+  50%{filter:drop-shadow(0 14px 34px oklch(0 0 0 / .55))
+             drop-shadow(0 0 16px oklch(0.9 0.1 88 / .45))}}
+.mono-wrap.mono-lit .mono-img{animation:monoGlow 5.5s ease-in-out infinite}
 .mono-none{display:flex;align-items:center;justify-content:center;
   width:min(30vw,10rem);height:min(30vw,10rem);color:oklch(0.84 0.11 82 / .45)}
 .mono-none svg{width:100%;height:100%}
@@ -315,7 +342,8 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
 }
 
 @media(prefers-reduced-motion:reduce){
-  .verse-ring,.breathe,.shimmer,.hero-in,.cue button,.bokeh circle,.std span{animation:none!important}
+  .verse-ring,.breathe,.shimmer,.hero-in,.cue button,.bokeh circle,.std span,
+  .mono-tint,.mono-wrap.mono-lit .mono-img{animation:none!important}
   .std span{opacity:1}
   .reveal{opacity:1;transform:none;transition:none}
 }
@@ -421,7 +449,7 @@ function render(){
 
   /* מסך פתיחה — ללא טקסט כלל. רק המונוגרמה והפסוק המסתובב. */
   const monogram = has(d.monogramImage)
-    ? `<img class="mono-img" src="${esc(d.monogramImage)}" alt="מונוגרמה">`
+    ? `<div class="mono-wrap"><img class="mono-img" src="${esc(d.monogramImage)}" alt="מונוגרמה"></div>`
     : `<div class="mono-none" title="המונוגרמה מועלית בפאנל הניהול">
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
               stroke-linejoin="round" aria-hidden="true">
@@ -656,6 +684,49 @@ function initSmooth(){
   };
   addEventListener("scroll", () => { targetY = scrollY; }, {passive:true});
   requestAnimationFrame(loop);
+}
+
+/* ===== גוון והברקה של המונוגרמה =====
+   צביעה נעשית בטכניקת mask, ולכן היא אפשרית רק אם לתמונה יש רקע שקוף.
+   בודקים זאת פעם אחת על קנבס; אם התמונה אטומה (למשל JPG), מוותרים על
+   הצביעה ומשאירים רק את הנצנוץ, כדי לא לקבל מלבן זהב אחיד. */
+function hasTransparency(img){
+  try{
+    const S = 48;
+    const cv = document.createElement('canvas');
+    cv.width = S; cv.height = S;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, S, S);
+    const px = ctx.getImageData(0, 0, S, S).data;
+    let clear = 0;
+    for(let i = 3; i < px.length; i += 4) if(px[i] < 16) clear++;
+    // סף נמוך בכוונה: די בשוליים שקופים כדי שהסטנסיל יעבוד
+    return clear > (S * S) * 0.12;
+  }catch(e){
+    return false; // קנבס חסום או תמונה שלא נטענה — לא מנחשים
+  }
+}
+
+function initMonogram(){
+  const wrap = document.querySelector('.mono-wrap');
+  const img = wrap && wrap.querySelector('.mono-img');
+  // הצביעה חלה גם כשהמשתמש ביקש פחות תנועה — רק האנימציה מושבתת (ב-CSS)
+  if(!wrap || !img) return;
+
+  const apply = () => {
+    if(!img.naturalWidth) return;
+    if(!hasTransparency(img)){ wrap.classList.add('mono-lit'); return; }
+    const layer = document.createElement('div');
+    layer.className = 'mono-tint';
+    // אותה כתובת משמשת גם כמסכה — הדפדפן כבר החזיק אותה במטמון
+    layer.style.setProperty('--mono-src', `url("${img.currentSrc || img.src}")`);
+    wrap.appendChild(layer);
+    wrap.classList.add('tinted');
+  };
+
+  if(img.complete) apply();
+  else img.addEventListener('load', apply, { once: true });
+  img.addEventListener('error', () => wrap.classList.remove('tinted'), { once: true });
 }
 
 /* גלילה מונחית איטית לחץ */
@@ -1040,6 +1111,7 @@ function armIdle(){
 
 initTrail();          // ראשון — כדי שלא יהיה תלוי בשום דבר אחר
 try { render(); } catch(err){ console.error("render", err); }
+try { initMonogram(); } catch(err){ console.warn("initMonogram", err); }
 try { initSmooth(); } catch(err){ console.warn("initSmooth", err); }
 armIdle();
 addEventListener("load", measure);
