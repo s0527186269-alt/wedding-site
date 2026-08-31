@@ -82,6 +82,7 @@ header .sub{font-size:.85rem;color:var(--muted)}
 .filebtn:hover{border-color:var(--accent)}
 .strip{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:.5rem}
 .strip img{height:3.5rem;border-radius:.35rem;object-fit:contain;background:oklch(0.2 0.03 300);padding:.25rem}
+.strip audio{height:2.5rem;max-width:100%;flex:1 1 14rem}
 .link{background:none;border:0;cursor:pointer;font-size:.78rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 .link:hover{color:var(--danger)}
 
@@ -378,6 +379,17 @@ const FILE = (label, key, hint) => `
       <button class="link" onclick="set('${key}','',true)">הסרה</button></div>` : ""}
     ${hint?`<span class="hint">${hint}</span>`:""}
   </div>`;
+const AUDIO = (label, key, hint) => `
+  <div class="f"><span>${label}</span>
+    <label class="filebtn">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      העלאת קובץ מהמחשב
+      <input type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" hidden onchange="pickAudio(this,'${key}')">
+    </label>
+    ${cur()[key] ? `<div class="strip"><audio src="${esc(cur()[key])}" controls preload="none"></audio>
+      <button class="link" onclick="set('${key}','',true)">הסרה</button></div>` : ""}
+    ${hint?`<span class="hint">${hint}</span>`:""}
+  </div>`;
 const SEC = (title, inner, open) =>
   `<details class="sec" ${open?"open":""}><summary>${title}</summary><div class="body">${inner}</div></details>`;
 
@@ -403,7 +415,7 @@ async function shrink(file){
   return out.size < file.size ? out : file;
 }
 
-async function uploadImage(slug, key, blob){
+async function uploadFile(slug, key, blob){
   const type = blob.type || "application/octet-stream";
   const r = await fetch(`/api/upload?slug=${encodeURIComponent(slug)}&field=${encodeURIComponent(key)}`, {
     method: "POST",
@@ -411,7 +423,7 @@ async function uploadImage(slug, key, blob){
     body: blob
   });
   if(r.status === 401){
-    if(askKey()) return uploadImage(slug, key, blob);
+    if(askKey()) return uploadFile(slug, key, blob);
     throw new Error("unauthorized");
   }
   if(r.status === 413) throw new Error("הקובץ גדול מדי");
@@ -429,11 +441,29 @@ async function pick(input, key){
   flash("מעלה את התמונה…");
   try{
     const blob = await shrink(f);
-    const url = await uploadImage(c.__slug, key, blob);
+    const url = await uploadFile(c.__slug, key, blob);
     set(key, url, true);
     await saveActive();
   }catch(e){
     flash(e && e.message && e.message !== "upload failed" ? e.message : "העלאת התמונה נכשלה");
+  }
+}
+
+// אודיו עולה כמו שהוא — אין דחיסה בדפדפן כמו בתמונות, ולכן הקובץ נשלח במלואו
+async function pickAudio(input, key){
+  const f = input.files && input.files[0]; if(!f) return;
+  input.value = "";
+  const c = cur(); if(!c) return;
+  if(!c.__saved){ flash("שמרי את הלקוח פעם אחת לפני העלאת קבצים"); return; }
+  if(f.size > 20_000_000){ flash("הקובץ גדול מדי — עד 20MB"); return; }
+  flash("מעלה את המוזיקה… זה עשוי לקחת רגע");
+  try{
+    const url = await uploadFile(c.__slug, key, f);
+    set(key, url, true);
+    await saveActive();
+    flash("המוזיקה הועלתה");
+  }catch(e){
+    flash(e && e.message && e.message !== "upload failed" ? e.message : "העלאת המוזיקה נכשלה");
   }
 }
 
@@ -506,7 +536,8 @@ function renderEditor(){
       F("המייל שלך","ctaEmail","הכפתור יפתח מייל חדש לכתובת הזו. אם ריק — הכפתור לא מקושר."))}
 
     ${SEC("מוזיקה",
-      F("קישור לקובץ המוזיקה","musicUrl","קישור ישיר ל-mp3. אם ריק — הפופ-אפ והנגן לא יוצגו כלל."))}
+      AUDIO("קובץ המוזיקה","musicUrl","אפשר להעלות קובץ מהמחשב (mp3, m4a, ogg, wav — עד 20MB) או להדביק קישור בשדה למטה. אם ריק — הפופ-אפ והנגן לא יוצגו כלל.") +
+      F("או קישור חיצוני","musicUrl","העלאת קובץ תדרוס את מה שכתוב כאן."))}
   `;
 }
 

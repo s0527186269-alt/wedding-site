@@ -17,9 +17,21 @@ const EXT = {
   "image/webp": "webp",
   "image/gif": "gif",
   "image/svg+xml": "svg",
+  // אודיו — לקובץ המוזיקה של ההזמנה
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/aac": "m4a",
+  "audio/ogg": "ogg",
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
 };
 
-const MAX_BYTES = 8_000_000;
+// תמונות מוקטנות בדפדפן לפני ההעלאה, ולכן 8MB מספיקים בשפע.
+// אודיו לעומת זאת עולה כמו שהוא — שיר של שלוש דקות ב-192kbps שוקל כ-4MB.
+const MAX_IMAGE_BYTES = 8_000_000;
+const MAX_AUDIO_BYTES = 20_000_000;
 
 const clean = (v) => String(v || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
 
@@ -39,9 +51,11 @@ export async function onRequestPost({ request, env }) {
   const ext = EXT[type];
   if (!ext) return json({ error: "unsupported type" }, 415);
 
+  const max = type.startsWith("audio/") ? MAX_AUDIO_BYTES : MAX_IMAGE_BYTES;
+
   const body = await request.arrayBuffer();
   if (!body.byteLength) return json({ error: "empty body" }, 400);
-  if (body.byteLength > MAX_BYTES) return json({ error: "too large" }, 413);
+  if (body.byteLength > max) return json({ error: "too large" }, 413);
 
   const key = `${slug}/${field}-${Date.now().toString(36)}.${ext}`;
   await env.MEDIA.put(key, body, {
