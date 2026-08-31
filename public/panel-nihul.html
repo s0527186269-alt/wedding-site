@@ -63,7 +63,11 @@ header .sub{font-size:.85rem;color:var(--muted)}
 /* טופס */
 .toolbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:var(--card);
   border:1px solid var(--line);border-radius:.9rem;padding:.85rem;margin-bottom:1rem}
-.toolbar .url{margin-inline-start:auto;font-size:.75rem;color:var(--muted);direction:ltr}
+.toolbar .url{margin-inline-start:auto;font-size:.75rem;color:var(--muted);
+  display:flex;align-items:center;gap:.6rem}
+.toolbar .url .draft{color:var(--muted);font-style:italic}
+.btn-copy{border-color:var(--accent);color:var(--accent)}
+.btn-copy:hover{background:var(--accent);color:#fff}
 .sec{background:var(--card);border:1px solid var(--line);border-radius:.9rem;margin-bottom:1rem;overflow:hidden}
 .sec > summary{cursor:pointer;padding:.85rem 1rem;font-family:var(--head);font-weight:700;font-size:.98rem;
   list-style:none;display:flex;align-items:center;justify-content:space-between}
@@ -353,6 +357,23 @@ function showGuests(c, list){
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 
+async function copyLink(){
+  const c = cur(); if(!c) return;
+  const url = location.origin + "/i/" + c.__slug;
+  try{
+    await navigator.clipboard.writeText(url);
+    flash("הקישור הועתק");
+  }catch(e){
+    // דפדפנים ישנים, או דף שלא נטען ב-https — נופלים לשיטה הידנית
+    const ta = document.createElement("textarea");
+    ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); flash("הקישור הועתק"); }
+    catch(_){ prompt("העתיקי את הקישור:", url); }
+    ta.remove();
+  }
+}
+
 function flash(msg){
   const el = document.getElementById('status');
   el.textContent = msg; el.hidden = false;
@@ -548,7 +569,18 @@ function renderEditor(){
       </button>
       <button class="btn" onclick="loadGuests()">ברכות שהתקבלו</button>
       <button class="btn btn-danger" onclick="removeClient()">מחיקה</button>
-      <span class="url">https://הדומיין-שלך/i/${esc(c.__slug)}</span>
+      ${c.__published
+        ? `<button class="btn btn-copy" onclick="copyLink()">
+             <svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+             העתקת קישור ההזמנה
+           </button>
+           <a class="btn" href="${esc(location.origin)}/i/${esc(c.__slug)}" target="_blank" rel="noopener">פתיחה</a>`
+        : ``}
+      <span class="url" id="livelink">
+        ${c.__published
+          ? `<span dir="ltr">${esc(location.origin)}/i/${esc(c.__slug)}</span>`
+          : `<span class="draft">כדי לקבל קישור לשליחה — לחצי "פרסום ההזמנה"</span>`}
+      </span>
     </div>
 
     ${SEC("פרטי הלקוח", `
