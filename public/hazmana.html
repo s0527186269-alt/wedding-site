@@ -133,7 +133,6 @@ main{position:relative;z-index:1}
 .fronts{padding:var(--gap) 1rem}
 .fronts-wrap{max-width:84rem;margin:0 auto;display:flex;flex-wrap:wrap;
   align-items:center;justify-content:center;gap:0;perspective:2400px}
-.page-par{will-change:transform}
 .page{position:relative;width:min(86vw,30rem);transition:transform 1.4s cubic-bezier(.16,1,.3,1)}
 .page.a{transform:rotateY(16deg) rotate(-1.2deg);transform-origin:left center;z-index:2}
 .page.b{transform:rotateY(-16deg) rotate(1.2deg);transform-origin:right center;z-index:1}
@@ -437,10 +436,10 @@ function render(){
   </div></section>`);
   parts.push(cue());
 
-  /* דפי ההזמנה — עם תזוזה עדינה בגלילה */
+  /* דפי ההזמנה — ממוקמים קבוע, בלי תזוזה בגלילה */
   const pages = [];
-  if(has(d.invitationA)) pages.push(`<figure class="page-par" data-par="0.05"><div class="page a"><div class="page-frame"><img src="${esc(d.invitationA)}" alt="דף ההזמנה"></div></div></figure>`);
-  if(has(d.invitationB)) pages.push(`<figure class="page-par" data-par="-0.05"><div class="page b"><div class="page-frame"><img src="${esc(d.invitationB)}" alt="דף ההזמנה"></div></div></figure>`);
+  if(has(d.invitationA)) pages.push(`<figure class="page-par"><div class="page a"><div class="page-frame"><img src="${esc(d.invitationA)}" alt="דף ההזמנה"></div></div></figure>`);
+  if(has(d.invitationB)) pages.push(`<figure class="page-par"><div class="page b"><div class="page-frame"><img src="${esc(d.invitationB)}" alt="דף ההזמנה"></div></div></figure>`);
   if(pages.length){
     parts.push(`<div class="reveal"><section class="fronts"><div class="fronts-wrap">${pages.join("")}</div></section></div>`);
     parts.push(cue());
@@ -653,23 +652,11 @@ function initSmooth(){
     currentY += (targetY - currentY) * 0.042;
     if(Math.abs(targetY - currentY) < 0.05) currentY = targetY;
     wrap.style.transform = `translate3d(0, ${-currentY.toFixed(2)}px, 0)`;
-    parallax();
     requestAnimationFrame(loop);
   };
   addEventListener("scroll", () => { targetY = scrollY; }, {passive:true});
   requestAnimationFrame(loop);
 }
-
-/* תזוזה עדינה של דפי ההזמנה בגלילה */
-function parallax(){
-  const mid = innerHeight / 2;
-  document.querySelectorAll('[data-par]').forEach(el => {
-    const r = el.getBoundingClientRect();
-    const off = (r.top + r.height / 2 - mid) * parseFloat(el.dataset.par);
-    el.style.transform = `translate3d(0, ${off.toFixed(1)}px, 0)`;
-  });
-}
-if(!smoothOn) addEventListener("scroll", () => { if(!smoothOn) parallax(); }, {passive:true});
 
 /* גלילה מונחית איטית לחץ */
 function next(btn){
