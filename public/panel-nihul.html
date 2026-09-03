@@ -296,6 +296,40 @@ function niceDate(iso){
   return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/* בדיקת שליחת מייל — מדווחת את השגיאה האמיתית מ-Brevo, בניגוד לזרימת האורח
+   שנכשלת בשקט בכוונה כדי שתקלה בשירות המייל לא תוצג לאורח */
+async function testEmail(){
+  const c = cur(); if(!c) return;
+  const to = (c.notifyEmail || "").trim() || prompt("לאיזו כתובת לשלוח מייל בדיקה?", "");
+  if(!to) return;
+  flash("שולח מייל בדיקה...");
+  try{
+    const cfg = await fetch('/api/diag-email', { headers: apiHeaders() });
+    if(cfg.status === 401){ if(askKey()) return testEmail(); return; }
+    if(!cfg.ok) throw new Error("bad status");
+    const cfgData = await cfg.json();
+    const missing = ["BREVO_API_KEY","NOTIFY_FROM"].filter(k => !cfgData[k]);
+    if(missing.length){
+      alert("חסרים משתני סביבה ב-Cloudflare: " + missing.join(", ") +
+        "\n\nיש להוסיף אותם תחת הגדרות הפרויקט ← Environment variables, ואז לבצע Retry deployment.");
+      return;
+    }
+    const r = await fetch('/api/diag-email', { method: "POST", headers: apiHeaders(), body: JSON.stringify({ to }) });
+    if(r.status === 401){ if(askKey()) return testEmail(); return; }
+    const data = await r.json();
+    if(data.ok){
+      alert("הבקשה נשלחה בהצלחה ל-Brevo, יעד: " + to + ".\nבדקי את תיבת הדואר (וגם ספאם) — ההגעה בפועל תלויה ב-Brevo.");
+    }else if(data.reason === "brevo-error"){
+      alert("Brevo דחה את השליחה (קוד " + data.status + "):\n\n" + data.detail +
+        "\n\nהסיבה השכיחה ביותר: הכתובת ב-NOTIFY_FROM אינה מאומתת ב-Brevo, או שאינה זהה אות-באות לשולח המאומת.");
+    }else{
+      alert("השליחה נכשלה: " + (data.detail || data.reason || "שגיאה לא ידועה"));
+    }
+  }catch(e){
+    alert("לא הצלחתי לבדוק — יש בעיה בתקשורת עם השרת.");
+  }
+}
+
 /* עמוד ברכות להדפסה — נפתח בחלון נפרד, מעוצב לנייר A4 */
 function showGuests(c, list){
   const w = window.open("", "_blank");
@@ -630,7 +664,8 @@ function renderEditor(){
     ${SEC("ברכות מהאורחים",
       F("כותרת הסקשן","greetTitle","אם ריק — סקשן הברכות לא מוצג") +
       F("תת-כותרת","greetSub") +
-      F("התראה במייל","notifyEmail","כל ברכה חדשה תישלח לכתובת הזו — למשל המייל של הזוג. אם ריק — נשלח לכתובת ברירת המחדל שהוגדרה ב-Cloudflare."))}
+      F("התראה במייל","notifyEmail","כל ברכה חדשה תישלח לכתובת הזו — למשל המייל של הזוג. אם ריק — נשלח לכתובת ברירת המחדל שהוגדרה ב-Cloudflare.") +
+      `<button type="button" class="btn" style="margin-top:.3rem" onclick="testEmail()">שליחת מייל בדיקה</button>`)}
 
     ${SEC("כפתור הסיום — פנייה אלייך",
       F("טקסט הכפתור","ctaText","מופיע בתחתית ההזמנה במקום שורת הסיום") +
