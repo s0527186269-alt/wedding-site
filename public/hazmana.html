@@ -175,6 +175,8 @@ main{position:relative;z-index:1}
 @media(max-width:760px){
   .fronts-wrap{gap:2rem}
   .page.a,.page.b{transform:none;width:min(90vw,30rem)}
+  .page-par:has(.page.a){order:2}
+  .page-par:has(.page.b){order:1}
 }
 .page-frame{position:relative;aspect-ratio:3/4;width:100%;overflow:hidden;border-radius:.4rem;
   box-shadow:0 55px 90px -45px oklch(0 0 0 / .95), 0 0 0 1px oklch(1 0 0 / .07)}
