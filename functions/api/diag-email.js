@@ -14,13 +14,13 @@ function authorized(request, env) {
 export async function onRequestGet({ request, env }) {
   if (!authorized(request, env)) return json({ error: "unauthorized" }, 401);
   return json({
-    BREVO_API_KEY: Boolean(env.BREVO_API_KEY),
+    RESEND_API_KEY: Boolean(env.RESEND_API_KEY),
     NOTIFY_FROM: Boolean(env.NOTIFY_FROM),
     NOTIFY_EMAIL: Boolean(env.NOTIFY_EMAIL),
   });
 }
 
-// POST /api/diag-email { to } -> admin only, sends a real test email and reports Brevo's actual
+// POST /api/diag-email { to } -> admin only, sends a real test email and reports Resend's actual
 // response instead of swallowing it (unlike the guest-facing flow in rsvp.js, which fails silently
 // on purpose so a broken mail setup never surfaces as an error to a guest).
 export async function onRequestPost({ request, env }) {
@@ -35,29 +35,28 @@ export async function onRequestPost({ request, env }) {
   const to = String(body.to || "").trim();
   if (!to) return json({ error: "missing to" }, 400);
 
-  if (!env.BREVO_API_KEY || !env.NOTIFY_FROM) {
+  if (!env.RESEND_API_KEY || !env.NOTIFY_FROM) {
     return json({ ok: false, reason: "missing-config" });
   }
 
   try {
-    const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+    const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "api-key": env.BREVO_API_KEY,
+        authorization: `Bearer ${env.RESEND_API_KEY}`,
         "content-type": "application/json",
-        accept: "application/json",
       },
       body: JSON.stringify({
-        sender: { name: "הזמנות", email: env.NOTIFY_FROM },
-        to: [{ email: to }],
+        from: `הזמנות <${env.NOTIFY_FROM}>`,
+        to: [to],
         subject: "מייל בדיקה — הזמנות",
-        htmlContent:
+        html:
           '<div dir="rtl" style="font-family:sans-serif;padding:16px">' +
           "זהו מייל בדיקה שנשלח מפאנל הניהול. אם הגיע — ההגדרות תקינות.</div>",
       }),
     });
     const detail = await r.text();
-    if (!r.ok) return json({ ok: false, reason: "brevo-error", status: r.status, detail });
+    if (!r.ok) return json({ ok: false, reason: "resend-error", status: r.status, detail });
     return json({ ok: true });
   } catch (e) {
     return json({ ok: false, reason: "network", detail: String(e) });

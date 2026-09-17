@@ -25,28 +25,27 @@ function buildEmail({ clientName, name, message, slug, origin }) {
   </div></body></html>`;
 }
 
-// שליחה דרך Brevo. נכשלת בשקט בכוונה: הברכה כבר נשמרה במסד,
+// שליחה דרך Resend. נכשלת בשקט בכוונה: הברכה כבר נשמרה במסד,
 // ואסור שתקלה בשירות המייל תציג לאורח הודעת שגיאה.
 async function notify(env, payload) {
   try {
-    const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+    const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "api-key": env.BREVO_API_KEY,
+        authorization: `Bearer ${env.RESEND_API_KEY}`,
         "content-type": "application/json",
-        accept: "application/json",
       },
       body: JSON.stringify({
-        // חייבת להיות כתובת מאומתת ב-Brevo (אימות בקוד בן 6 ספרות, בלי דומיין)
-        sender: { name: "הזמנות", email: env.NOTIFY_FROM },
-        to: [{ email: payload.to }],
+        // חייבת להיות כתובת מאומתת ב-Resend (דומיין מאומת, או resend.dev לבדיקות)
+        from: `הזמנות <${env.NOTIFY_FROM}>`,
+        to: [payload.to],
         subject: `ברכה חדשה — ${payload.clientName}`,
-        htmlContent: buildEmail(payload),
+        html: buildEmail(payload),
       }),
     });
-    if (!r.ok) console.log("brevo failed", r.status, await r.text());
+    if (!r.ok) console.log("resend failed", r.status, await r.text());
   } catch (e) {
-    console.log("brevo error", String(e));
+    console.log("resend error", String(e));
   }
 }
 
@@ -79,7 +78,7 @@ export async function onRequestPost(context) {
 
   // התראה במייל — לגמרי אופציונלית. בלי מפתח, בלי שולח מאומת
   // או בלי כתובת יעד — פשוט מדלגים, והברכה נשמרת כרגיל.
-  if (env.BREVO_API_KEY && env.NOTIFY_FROM) {
+  if (env.RESEND_API_KEY && env.NOTIFY_FROM) {
     let clientName = slug;
     let to = env.NOTIFY_EMAIL;
     try {

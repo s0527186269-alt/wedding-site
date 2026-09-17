@@ -296,7 +296,7 @@ function niceDate(iso){
   return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/* בדיקת שליחת מייל — מדווחת את השגיאה האמיתית מ-Brevo, בניגוד לזרימת האורח
+/* בדיקת שליחת מייל — מדווחת את השגיאה האמיתית מ-Resend, בניגוד לזרימת האורח
    שנכשלת בשקט בכוונה כדי שתקלה בשירות המייל לא תוצג לאורח */
 async function testEmail(){
   const c = cur(); if(!c) return;
@@ -308,7 +308,7 @@ async function testEmail(){
     if(cfg.status === 401){ if(askKey()) return testEmail(); return; }
     if(!cfg.ok) throw new Error("bad status");
     const cfgData = await cfg.json();
-    const missing = ["BREVO_API_KEY","NOTIFY_FROM"].filter(k => !cfgData[k]);
+    const missing = ["RESEND_API_KEY","NOTIFY_FROM"].filter(k => !cfgData[k]);
     if(missing.length){
       alert("חסרים משתני סביבה ב-Cloudflare: " + missing.join(", ") +
         "\n\nיש להוסיף אותם תחת הגדרות הפרויקט ← Environment variables, ואז לבצע Retry deployment.");
@@ -318,10 +318,10 @@ async function testEmail(){
     if(r.status === 401){ if(askKey()) return testEmail(); return; }
     const data = await r.json();
     if(data.ok){
-      alert("הבקשה נשלחה בהצלחה ל-Brevo, יעד: " + to + ".\nבדקי את תיבת הדואר (וגם ספאם) — ההגעה בפועל תלויה ב-Brevo.");
-    }else if(data.reason === "brevo-error"){
-      alert("Brevo דחה את השליחה (קוד " + data.status + "):\n\n" + data.detail +
-        "\n\nהסיבה השכיחה ביותר: הכתובת ב-NOTIFY_FROM אינה מאומתת ב-Brevo, או שאינה זהה אות-באות לשולח המאומת.");
+      alert("הבקשה נשלחה בהצלחה ל-Resend, יעד: " + to + ".\nבדקי את תיבת הדואר (וגם ספאם) — ההגעה בפועל תלויה ב-Resend.");
+    }else if(data.reason === "resend-error"){
+      alert("Resend דחה את השליחה (קוד " + data.status + "):\n\n" + data.detail +
+        "\n\nהסיבה השכיחה ביותר: הדומיין ב-NOTIFY_FROM אינו מאומת ב-Resend, או שהחשבון עדיין במצב בדיקה ומותר לשלוח רק לכתובת המייל שנרשמת איתה.");
     }else{
       alert("השליחה נכשלה: " + (data.detail || data.reason || "שגיאה לא ידועה"));
     }
