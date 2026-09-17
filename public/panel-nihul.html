@@ -464,6 +464,18 @@ async function addClient(){
   clients.push(blank(slug, name)); select(slug);
   await saveActive();
 }
+// שכפול — עותק מלא של הלקוח הפעיל תחת כתובת חדשה, כדי לערוך בו רק את מה שצריך
+// לשנות ולפרסם בנפרד. נשמר כטיוטה תמיד, גם אם המקור פורסם.
+async function duplicateClient(){
+  const c = cur(); if(!c) return;
+  const name = prompt("שם הלקוח החדש (לשימוש פנימי):", c.__name + " - עותק"); if(!name) return;
+  const slug = slugify(prompt("כתובת ההזמנה (אנגלית):", slugify(name)) || ""); if(!slug) return;
+  if(clients.some(o=>o.__slug===slug)){ alert("כתובת זו כבר תפוסה"); return; }
+  const copy = Object.assign({}, c, { __slug: slug, __name: name, __published: false });
+  delete copy.__saved;
+  clients.push(copy); select(slug);
+  await saveActive();
+}
 function removeClient(){
   if(!confirm("למחוק את ההזמנה?")) return;
   const slug = active;
@@ -602,6 +614,10 @@ function renderEditor(){
         ${c.__published ? "החזרה לטיוטה" : "פרסום ההזמנה"}
       </button>
       <button class="btn" onclick="loadGuests()">ברכות שהתקבלו</button>
+      <button class="btn" onclick="duplicateClient()">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        שכפול
+      </button>
       <button class="btn btn-danger" onclick="removeClient()">מחיקה</button>
       ${c.__published
         ? `<button class="btn btn-copy" onclick="copyLink()">
