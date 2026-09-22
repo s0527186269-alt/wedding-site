@@ -511,7 +511,7 @@ function render(){
     </div>`);
   }
   if(has(d.calendarLabel) && has(d.targetDate) && !isNaN(new Date(d.targetDate).getTime()))
-    c.push(`<a class="btn btn-solid" style="margin-top:3rem" href="#" onclick="return saveIcs()">
+    c.push(`<a class="btn btn-solid" style="margin-top:3rem" href="${esc(googleCalendarUrl(d))}" target="_blank" rel="noopener noreferrer">
     <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg>
     ${esc(d.calendarLabel)}</a>`);
   if(c.length) parts.push(`<div class="reveal"><section class="count"><div class="count-in">${c.join("")}</div></section></div>`);
@@ -521,8 +521,7 @@ function render(){
   const clk = `<svg class="ico ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
   const nav = `<svg class="ico ico-lg" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>`;
   const ext = url => url ? `href="${esc(url)}" target="_blank" rel="noopener noreferrer"` : "";
-  const calAction = has(d.targetDate) && !isNaN(new Date(d.targetDate).getTime())
-    ? `href="#" onclick="return saveIcs()"` : "";
+  const calAction = ext(googleCalendarUrl(d));
   const circles = [
     flip(d.whereQ, d.whereInfo, d.whereBtn, pin, ext(mapUrl(d))),
     flip(d.whenQ,  d.whenInfo,  d.whenBtn,  clk, calAction),
@@ -643,65 +642,26 @@ function wazeUrl(d){
   return "https://www.waze.com/ul?q=" + encodeURIComponent(q) + "&navigate=yes";
 }
 
-/* קובץ יומן בתקן iCalendar (RFC 5545) */
+/* קישור שפותח ישירות מסך "הוספת אירוע" מלא ב-Google Calendar */
 const pad2 = n => String(n).padStart(2, "0");
-// זמן מקומי "צף" — בלי אזור זמן. כך האירוע מופיע ב-19:00 אצל כל אורח בארץ.
-const icsLocal = dt => dt.getFullYear() + pad2(dt.getMonth()+1) + pad2(dt.getDate())
-  + "T" + pad2(dt.getHours()) + pad2(dt.getMinutes()) + "00";
 const icsUtc = dt => dt.getUTCFullYear() + pad2(dt.getUTCMonth()+1) + pad2(dt.getUTCDate())
   + "T" + pad2(dt.getUTCHours()) + pad2(dt.getUTCMinutes()) + pad2(dt.getUTCSeconds()) + "Z";
-const icsEsc = s => String(s ?? "")
-  .replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
-// התקן מגביל שורה ל-75 אוקטטים; שוברים לפי בייטים כי עברית היא רב-בייטית
-function icsFold(line){
-  const bytes = new TextEncoder().encode(line);
-  if(bytes.length <= 75) return line;
-  const out = [];
-  let cur = "", curLen = 0, limit = 75;
-  for(const ch of line){
-    const n = new TextEncoder().encode(ch).length;
-    if(curLen + n > limit){ out.push(cur); cur = " "; curLen = 1; limit = 75; }
-    cur += ch; curLen += n;
-  }
-  out.push(cur);
-  return out.join("\r\n");
-}
 
-function saveIcs(){
-  const d = data;
+function googleCalendarUrl(d){
   const start = new Date(d.targetDate);
-  if(!d.targetDate || isNaN(start.getTime())){ return false; }
+  if(!d.targetDate || isNaN(start.getTime())) return "";
   const end = new Date(start.getTime() + 4 * 60 * 60 * 1000); // ברירת מחדל: 4 שעות
 
   const title = has(d.marryingLine) ? d.marryingLine
               : has(d.hosts) ? "חתונה — " + d.hosts : "חתונה";
   const desc = [d.blessing, location.href].filter(has).join("\n\n");
 
-  const lines = [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//wedding-site//HE", "CALSCALE:GREGORIAN",
-    "BEGIN:VEVENT",
-    "UID:" + icsUtc(start) + "-" + Math.random().toString(36).slice(2, 8) + "@wedding-site",
-    "DTSTAMP:" + icsUtc(new Date()),
-    "DTSTART:" + icsLocal(start),
-    "DTEND:" + icsLocal(end),
-    "SUMMARY:" + icsEsc(title),
-    navQuery(d) ? "LOCATION:" + icsEsc(navQuery(d)) : "",
-    desc ? "DESCRIPTION:" + icsEsc(desc) : "",
-    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY",
-    "DESCRIPTION:" + icsEsc(title), "END:VALARM",
-    "END:VEVENT", "END:VCALENDAR",
-  ].filter(Boolean).map(icsFold);
-
-  const blob = new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "wedding.ics";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  return false;
+  const params = new URLSearchParams({
+    action: "TEMPLATE", text: title, dates: icsUtc(start) + "/" + icsUtc(end),
+  });
+  if(navQuery(d)) params.set("location", navQuery(d));
+  if(desc) params.set("details", desc);
+  return "https://calendar.google.com/calendar/render?" + params.toString();
 }
 
 function cue(){
