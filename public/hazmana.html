@@ -196,7 +196,13 @@ main{position:relative;z-index:1}
 .units{margin-top:1.75rem;display:grid;gap:1rem;justify-content:center;
   grid-template-columns:repeat(4,minmax(0,1fr));max-width:46rem;margin-inline:auto}
 @media(max-width:600px){
-  .units{grid-template-columns:repeat(2,minmax(0,1fr));max-width:23rem;gap:.75rem}
+  /* direction:ltr כאן ועמודה מפורשת לכל תא — כדי שהעמודה השמאלית תמיד
+     תכיל ימים+דקות והימנית שעות+שניות, בלי תלות בתמיכת הדפדפן ב-RTL ברשת */
+  .units{grid-template-columns:repeat(2,minmax(0,1fr));max-width:23rem;gap:.75rem;direction:ltr}
+  .unit:nth-child(1){grid-column:1;grid-row:1}
+  .unit:nth-child(2){grid-column:2;grid-row:1}
+  .unit:nth-child(3){grid-column:1;grid-row:2}
+  .unit:nth-child(4){grid-column:2;grid-row:2}
 }
 .unit{width:auto;min-width:0;border-radius:1.6rem;padding:1.9rem .75rem 1.35rem;
   background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(14px);
@@ -492,7 +498,7 @@ function render(){
   if(has(d.targetDate)){
     if(has(d.countdownLabel)) c.push(`<p class="beod">${esc(d.countdownLabel)}</p>`);
     /* בעברית הפריט הראשון יושב מימין — לכן ימים ראשונים ושניות אחרונות.
-       כך גם בנייד (רשת של שתיים) השורה הראשונה היא ימים ושעות, והשנייה דקות ושניות. */
+       סדר העמודות בנייד (ימים+דקות משמאל, שעות+שניות מימין) נקבע במפורש ב-CSS. */
     const order = [["ימים",0],["שעות",1],["דקות",2],["שניות",3]];
     c.push(`<div class="units" role="timer">${order.map(([l,i])=>
       `<div class="unit"><div class="n" data-u="${i}">00</div><div class="l">${l}</div></div>`).join("")}</div>`);
