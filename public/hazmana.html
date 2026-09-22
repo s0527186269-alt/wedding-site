@@ -635,7 +635,12 @@ function mapUrl(d){
 }
 function wazeUrl(d){
   const q = navQuery(d);
-  return q ? "https://www.waze.com/ul?q=" + encodeURIComponent(q) + "&navigate=yes" : "";
+  if(!q) return "";
+  // בדסקטופ לקישור העומק של Waze אין נפילה חיננית — הוא רק דוחף להתקין את
+  // האפליקציה. לכן במחשב שולחים לגוגל מפות במקום, ורק בנייד/טאבלט ל-Waze עצמו.
+  const isTouch = matchMedia("(pointer:coarse)").matches || navigator.maxTouchPoints > 0;
+  if(!isTouch) return mapUrl(d);
+  return "https://www.waze.com/ul?q=" + encodeURIComponent(q) + "&navigate=yes";
 }
 
 /* קובץ יומן בתקן iCalendar (RFC 5545) */
