@@ -33,7 +33,9 @@ body{font-family:var(--body);font-weight:400;color:var(--light);
 h1,h2,h3,h4{font-family:var(--head);font-weight:700;line-height:1.15}
 
 /* ===== גלילה חלקה ===== */
-#smooth{will-change:transform}
+/* חוסם כל גלישה לרוחב: בלי זה, אלמנט שבולט אפילו בפיקסל אחד גורם לדפדפן בנייד
+   להקטין את העמוד, והרקע הקבוע נגמר לפני קצה המסך (פס כהה בצד) */
+#smooth{will-change:transform;overflow-x:clip}
 body.smooth-on #smooth{position:fixed;top:0;left:0;width:100%}
 
 /* ===== רקע ===== */
@@ -126,7 +128,7 @@ main{position:relative;z-index:1}
 /* ===== מסך פתיחה ===== */
 .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;padding:5.5rem 1rem 0;text-align:center}
-#trail{position:fixed;inset:0;z-index:25;pointer-events:none}
+#trail{position:fixed;inset:0;width:100%;height:100%;z-index:25;pointer-events:none}
 .ring-wrap{position:relative;aspect-ratio:1;width:min(94vw,42rem);display:flex;align-items:center;justify-content:center}
 .ring-wrap > svg{position:absolute;inset:0;width:100%;height:100%}
 .inner-ring{position:absolute;width:60%;height:60%;border-radius:9999px;border:1px solid oklch(0.84 0.11 82 / .26)}
@@ -174,7 +176,8 @@ main{position:relative;z-index:1}
 .page:hover{transform:rotateY(0) rotate(0) scale(1.03);z-index:3}
 @media(max-width:760px){
   .fronts-wrap{gap:1rem;flex-wrap:nowrap}
-  .page.a,.page.b{width:min(44vw,16rem)}
+  /* שני הדפים + הרווח + שוליים של 1rem מכל צד — תמיד בתוך רוחב המסך */
+  .page.a,.page.b{width:min(calc(50vw - 1.75rem),16rem);min-width:0}
 }
 .page-frame{position:relative;aspect-ratio:3/4;width:100%;overflow:hidden;border-radius:.4rem;
   box-shadow:0 55px 90px -45px oklch(0 0 0 / .95), 0 0 0 1px oklch(1 0 0 / .07)}
@@ -1091,8 +1094,6 @@ function sizeTrail(){
   const dpr = devicePixelRatio || 1;
   cv.width = innerWidth * dpr;
   cv.height = innerHeight * dpr;
-  cv.style.width = innerWidth + "px";
-  cv.style.height = innerHeight + "px";
   trailCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
