@@ -323,7 +323,24 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
 .dialog-box p{margin-top:1rem;font-size:1.15rem;color:oklch(0.42 0.02 300)}
 .dialog-actions{margin-top:2.3rem;display:flex;flex-direction:row-reverse;justify-content:center;gap:1rem;flex-wrap:wrap}
 .dialog-actions .btn{min-width:12rem;font-size:1.25rem}
+/* פופאפ הפנייה — טופס שם + מייל על רקע הדיאלוג הבהיר */
+.lead-fields{margin-top:1.8rem;display:flex;flex-direction:column;gap:1.2rem;text-align:start}
+.lead-fields label{display:block;font-family:var(--head);font-size:1rem;font-weight:500;color:oklch(0.42 0.02 300)}
+.lead-fields input{margin-top:.45rem;width:100%;border:0;border-bottom:1px solid oklch(0.3 0.03 300 / .3);
+  background:transparent;padding:.6rem .25rem;font-size:1.1rem;font-family:var(--body);
+  color:oklch(0.20 0.03 300);outline:none;border-radius:0;transition:border-color .4s}
+.lead-fields input:focus{border-color:var(--gold-deep)}
+.lead-fields input[dir="ltr"]{text-align:right}
+.lead-trap{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;opacity:0}
+.dialog-box .lead-err{margin-top:1.1rem;font-size:1rem;color:oklch(0.52 0.17 25)}
+.lead-err a{color:inherit;font-weight:700}
+.lead-sent{display:flex;flex-direction:column;align-items:center}
+.lead-sent .mark{width:3.8rem;height:3.8rem;margin-bottom:1.1rem;border-radius:9999px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,var(--gold),var(--gold-deep));color:oklch(0.16 0.03 300)}
+.lead-sent .mark .ico{width:1.7rem;height:1.7rem}
 .btn-dark{background:oklch(0.24 0.035 295);color:var(--light)}
+.btn:disabled{opacity:.6;cursor:default;transform:none}
 .btn-dark:hover{transform:translateY(-2px);filter:brightness(1.18)}
 .btn-ghost{background:transparent;border-color:oklch(0.3 0.03 300 / .4);color:oklch(0.26 0.03 300)}
 .btn-ghost:hover{border-color:var(--gold-deep);color:var(--gold-deep)}
@@ -390,6 +407,37 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
         כן!
       </button>
       <button class="btn btn-ghost" onclick="choose(false)">לא, תודה.</button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog" id="lead" role="dialog" aria-modal="true" aria-labelledby="lt" hidden>
+  <div class="dialog-veil" onclick="closeLead()"></div>
+  <div class="dialog-box">
+    <button class="dialog-close" onclick="closeLead()" aria-label="סגירה">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <form id="lform" onsubmit="sendLead(event)" novalidate>
+      <h2 id="lt">רוצים גם הזמנה כזו?</h2>
+      <p>השאירו שם ומייל, ואחזור אליכם בהקדם</p>
+      <div class="lead-fields">
+        <label>שם<input id="ln" name="name" autocomplete="name" maxlength="200" required></label>
+        <label>מייל<input id="le" name="email" type="email" dir="ltr" autocomplete="email" maxlength="200" required></label>
+        <!-- מלכודת לבוטים: מוסתרת מבני אדם -->
+        <input id="lw" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="lead-trap">
+      </div>
+      <p class="lead-err" id="lerr" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button class="btn btn-dark" type="submit">
+          <svg class="ico" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+          שליחה
+        </button>
+      </div>
+    </form>
+    <div id="lsent" class="lead-sent" hidden>
+      <div class="mark"><svg class="ico" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h2>תודה!</h2>
+      <p>הפרטים התקבלו, אחזור אליכם בהקדם</p>
     </div>
   </div>
 </div>
@@ -576,16 +624,13 @@ function render(){
     </div></section></div>`);
   }
 
-  /* סיום — כפתור פנייה אלייך */
+  /* סיום — כפתור פנייה אלייך. פותח פופאפ להשארת שם ומייל (ראו openLead) */
   if(has(d.ctaText)){
-    const href = has(d.ctaEmail)
-      ? `mailto:${esc(d.ctaEmail)}?subject=${encodeURIComponent("רוצים הזמנה כזו")}`
-      : "#";
     parts.push(`<footer><span class="rule"></span>
-      <a class="btn btn-outline cta" href="${href}">
+      <button type="button" class="btn btn-outline cta" onclick="openLead()">
         <svg class="ico" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="m22 7-10 6L2 7"/></svg>
         ${esc(d.ctaText)}
-      </a></footer>`);
+      </button></footer>`);
   }
 
   document.getElementById('app').innerHTML = parts.join("");
@@ -1055,6 +1100,64 @@ function reset2(){
   document.getElementById('gform').reset();
   document.getElementById('gform').hidden = false;
   document.getElementById('gsent').hidden = true;
+}
+
+/* ===== פופאפ פנייה ("רוצים גם הזמנה כזו?") =====
+   שם + מייל נשלחים ל-/api/lead, שמעביר אותם במייל לכתובת "המייל שלך" של ההזמנה. */
+let leadOpener = null;
+function openLead(){
+  const box = document.getElementById('lead');
+  leadOpener = document.activeElement;
+  if(has(data.ctaText)) document.getElementById('lt').textContent = data.ctaText;
+  document.getElementById('lform').hidden = false;
+  document.getElementById('lsent').hidden = true;
+  document.getElementById('lerr').hidden = true;
+  box.hidden = false;
+  setTimeout(() => document.getElementById('ln').focus(), 60);
+}
+function closeLead(){
+  document.getElementById('lead').hidden = true;
+  if(leadOpener && leadOpener.focus) leadOpener.focus();
+}
+addEventListener('keydown', e => {
+  if(e.key === 'Escape' && !document.getElementById('lead').hidden) closeLead();
+});
+function leadError(msg){
+  const err = document.getElementById('lerr');
+  err.innerHTML = msg;
+  err.hidden = false;
+}
+function sendLead(e){
+  e.preventDefault();
+  const n = document.getElementById('ln'), m = document.getElementById('le');
+  const name = n.value.trim(), email = m.value.trim();
+  if(!name){ leadError('נא למלא שם'); n.focus(); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ leadError('נא למלא כתובת מייל תקינה'); m.focus(); return; }
+  document.getElementById('lerr').hidden = true;
+  const btn = e.target.querySelector('button[type="submit"]');
+  if(btn) btn.disabled = true;
+  fetch('/api/lead', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      slug: (window.CLIENT_SLUG || ''),
+      name, email,
+      website: document.getElementById('lw').value
+    })
+  }).then(r => { if(!r.ok) throw new Error('bad response'); return r.json(); })
+    .then(() => {
+      document.getElementById('lform').reset();
+      document.getElementById('lform').hidden = true;
+      document.getElementById('lsent').hidden = false;
+    })
+    .catch(() => {
+      // אם השליחה נכשלה — מציעים לפחות לשלוח מייל ישירות, אם הוגדרה כתובת
+      const direct = has(data.ctaEmail)
+        ? ` או <a href="mailto:${esc(data.ctaEmail)}?subject=${encodeURIComponent('רוצים הזמנה כזו')}">שלחו מייל ישירות</a>`
+        : '';
+      leadError(`משהו השתבש בשליחה. נסו שוב${direct}`);
+    })
+    .finally(() => { if(btn) btn.disabled = false; });
 }
 
 /* ===== בוקה ===== */
