@@ -483,6 +483,9 @@ const data = {
   whereBtn: "פתיחת מפה",
   // כתובת לניווט. אם ריק — נלקחת השורה האחרונה של whereInfo
   mapAddress: "",
+  // קואורדינטות מדויקות "lat,lng". אם ממולא, גובר על הכתובת ומבטיח ניווט
+  // מדויק גם ב-Waze במחשב (שאין לו חיפוש טקסט חופשי אמין)
+  mapCoords: "",
 
   whenQ: "מתי",
   whenInfo: "יום חמישי, 19 בנובמבר 2026\nקבלת פנים 19:00 · חופה 20:00",
@@ -670,6 +673,11 @@ function flip(q, info, btn, icon, action){
 /* ===== ניווט ויומן =====
    קישורים אוניברסליים: בדפדפן במחשב הם נפתחים באתר,
    ובטלפון מערכת ההפעלה מעבירה אותם לאפליקציה אם היא מותקנת. */
+// קואורדינטות מדויקות, אם הוזנו בתור "lat,lng"
+function navCoords(d){
+  const m = String(d.mapCoords || "").trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  return m ? { lat: m[1], lng: m[2] } : null;
+}
 function navQuery(d){
   if(has(d.mapAddress)) return d.mapAddress.trim();
   // נפילה חיננית — השורה האחרונה של "איפה" היא בדרך כלל הכתובת
@@ -677,14 +685,21 @@ function navQuery(d){
   return lines.length ? lines[lines.length - 1] : "";
 }
 function mapUrl(d){
+  const c = navCoords(d);
+  if(c) return "https://www.google.com/maps/search/?api=1&query=" + c.lat + "," + c.lng;
   const q = navQuery(d);
   return q ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q) : "";
 }
 function wazeUrl(d){
+  // עם קואורדינטות מדויקות, הקישור של Waze עובד נכון גם בדסקטופ (מעביר
+  // למפה החיה שלו עם היעד הנכון) — לא רק בנייד.
+  const c = navCoords(d);
+  if(c) return "https://www.waze.com/ul?ll=" + c.lat + "%2C" + c.lng + "&navigate=yes";
   const q = navQuery(d);
   if(!q) return "";
-  // בדסקטופ לקישור העומק של Waze אין נפילה חיננית — הוא רק דוחף להתקין את
-  // האפליקציה. לכן במחשב שולחים לגוגל מפות במקום, ורק בנייד/טאבלט ל-Waze עצמו.
+  // בלי קואורדינטות, לחיפוש טקסט חופשי של Waze אין נפילה חיננית בדסקטופ —
+  // הוא רק דוחף להתקין את האפליקציה. לכן במחשב שולחים לגוגל מפות במקום,
+  // ורק בנייד/טאבלט ל-Waze עצמו.
   const isTouch = matchMedia("(pointer:coarse)").matches || navigator.maxTouchPoints > 0;
   if(!isTouch) return mapUrl(d);
   return "https://www.waze.com/ul?q=" + encodeURIComponent(q) + "&navigate=yes";

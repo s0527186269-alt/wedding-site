@@ -181,7 +181,7 @@ const blank = (slug, name) => ({
   countdownLabel: "בעוד:", targetDate: "",
   marryingLine: "", saveTheDate: "Save the date!",
   blessing: "", hosts: "", calendarLabel: "שמרו ביומן",
-  whereQ: "איפה", whereInfo: "", whereBtn: "פתיחת מפה", mapAddress: "",
+  whereQ: "איפה", whereInfo: "", whereBtn: "פתיחת מפה", mapAddress: "", mapCoords: "",
   whenQ: "מתי", whenInfo: "", whenBtn: "שמרו ביומן",
   howQ: "איך מגיעים", howInfo: "", howBtn: "פתיחת Waze",
   greetTitle: "ברכות ואיחולים", greetSub: "", notifyEmail: "",
@@ -672,8 +672,9 @@ function renderEditor(){
     ${SEC("שלושת העיגולים",
       F("שאלה 1","whereQ","הצד הגלוי — רק השאלה") + F("מידע 1 (בגב)","whereInfo",null,3) + F("כפתור 1","whereBtn","פותח מפה בכתובת שלמטה") +
       F("כתובת לניווט","mapAddress","משמשת גם ל\"פתיחת מפה\" וגם ל-Waze. אם ריק — נלקחת השורה האחרונה של \"מידע 1\".") +
+      F("קואורדינטות מדויקות (lat,lng)","mapCoords","אופציונלי, לדוגמה: 31.703389,35.116961. אפשר להעתיק מגוגל מפות (קליק ימני על הנקודה → המספרים למעלה) או משיתוף מיקום מתוך Waze. אם ממולא, גובר על הכתובת שלמעלה ומבטיח שגם Waze וגם המפה יוליכו בדיוק למקום הנכון — כולל ב-Waze מהמחשב.") +
       `<hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">` +
-      F("שאלה 2","whenQ") + F("מידע 2 (בגב)","whenInfo",null,3) + F("כפתור 2","whenBtn","מוריד קובץ יומן לפי \"תאריך היעד\". בלי תאריך תקין הכפתור לא יוצג.") +
+      F("שאלה 2","whenQ") + F("מידע 2 (בגב)","whenInfo",null,3) + F("כפתור 2","whenBtn","פותח מסך הוספת אירוע מוכן ב-Google Calendar לפי \"תאריך היעד\". בלי תאריך תקין הכפתור לא יוצג.") +
       `<hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">` +
       F("שאלה 3","howQ") + F("מידע 3 (בגב)","howInfo",null,3) + F("כפתור 3","howBtn","פותח ניווט ב-Waze לכתובת שלמעלה"))}
 
