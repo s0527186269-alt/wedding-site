@@ -435,7 +435,7 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
         <label>שם<input id="ln" name="name" autocomplete="name" maxlength="200" required></label>
         <label>טלפון<input id="lp" name="phone" type="tel" dir="ltr" autocomplete="tel" maxlength="50" required></label>
         <label>מייל<input id="le" name="email" type="email" dir="ltr" autocomplete="email" maxlength="200" required></label>
-        <label>תאריך האירוע (אם כבר ידוע)<input id="ldate" name="eventDate" type="date"></label>
+        <label>תאריך האירוע (עברי, אם כבר ידוע)<input id="ldate" name="eventDate" type="text" maxlength="100"></label>
         <div class="lead-group" id="lpkgGroup">
           <span>איזו חבילה?</span>
           <label class="lead-radio"><input type="radio" name="lpkg" value="1" checked><span id="lpkg1"></span></label>
@@ -446,7 +446,7 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
           <label class="lead-radio"><input type="radio" name="lpay" value="העברה בנקאית" checked><span>העברה בנקאית</span></label>
           <div class="lead-bank" id="lbank" hidden></div>
         </div>
-        <label>הערות (לא חובה)<textarea id="lnotes" name="notes" rows="2" maxlength="2000"></textarea></label>
+        <label>יש משהו שחשוב לכם לציין?<textarea id="lnotes" name="notes" rows="2" maxlength="2000"></textarea></label>
         <!-- מלכודת לבוטים: מוסתרת מבני אדם -->
         <input id="lw" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="lead-trap">
       </div>
@@ -525,8 +525,8 @@ const data = {
 
   ctaText: "רוצים גם הזמנה כזו?",
   ctaEmail: "",
-  orderOption1: "צד אחד",
-  orderOption2: "שני צדדים",
+  orderOption1: "הזמנה אחת — 350 ש״ח",
+  orderOption2: "הזמנה ל-2 המשפחות — 550 ש״ח",
   bankDetails: "",
 
   musicUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=solo-piano-melody-118392.mp3",
