@@ -520,12 +520,17 @@ const data = {
 
   ctaText: "רוצים גם הזמנה כזו?",
   ctaEmail: "",
-  orderOption1: "הזמנה אחת — 350 ש״ח",
-  orderOption2: "הזמנה ל-2 המשפחות — 550 ש״ח",
 
   musicUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=solo-piano-melody-118392.mp3",
 };
 /*__DATA_END__*/
+
+// חבילות ההזמנה בטופס "רוצים גם הזמנה כזו?" — קבועות ואחידות לכל ההזמנות,
+// ולכן מחוץ ל-data (לא מוגדרות מחדש בכל לקוח). לשינוי המחיר/הטקסט: כאן בלבד.
+const ORDER_OPTIONS = {
+  1: "הזמנה אחת — 350 ש״ח",
+  2: "הזמנה ל-2 המשפחות — 550 ש״ח",
+};
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -1146,8 +1151,8 @@ function openLead(){
   const box = document.getElementById('lead');
   leadOpener = document.activeElement;
   if(has(data.ctaText)) document.getElementById('lt').textContent = data.ctaText;
-  document.getElementById('lpkg1').textContent = has(data.orderOption1) ? data.orderOption1 : "אפשרות 1";
-  document.getElementById('lpkg2').textContent = has(data.orderOption2) ? data.orderOption2 : "אפשרות 2";
+  document.getElementById('lpkg1').textContent = ORDER_OPTIONS[1];
+  document.getElementById('lpkg2').textContent = ORDER_OPTIONS[2];
   document.getElementById('lform').hidden = false;
   document.getElementById('lsent').hidden = true;
   document.getElementById('lerr').hidden = true;
