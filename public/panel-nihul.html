@@ -126,6 +126,7 @@ header .sub{font-size:.85rem;color:var(--muted)}
         <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
         הורדת ההזמנה
       </button>
+      <button class="btn" onclick="loadLeads()">הזמנות שהתקבלו</button>
     </div>
   </div>
 </header>
@@ -186,6 +187,7 @@ const blank = (slug, name) => ({
   howQ: "איך מגיעים", howInfo: "", howBtn: "פתיחת Waze",
   greetTitle: "ברכות ואיחולים", greetSub: "", notifyEmail: "",
   ctaText: "רוצים גם הזמנה כזו?", ctaEmail: "",
+  orderOption1: "צד אחד", orderOption2: "שני צדדים", bankDetails: "",
   musicUrl: "",
 });
 
@@ -390,6 +392,95 @@ function showGuests(c, list){
 }
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+/* הזמנות שהתקבלו דרך כפתור "רוצים גם הזמנה כזו?" בכל ההזמנות — גלובלי,
+   לא קשור ללקוח נבחר, ולכן הכפתור יושב למעלה בכותרת ולא בתוך עורך הלקוח */
+async function loadLeads(){
+  try{
+    const r = await fetch('/api/leads', { headers: apiHeaders() });
+    if(r.status === 401){ if(askKey()) return loadLeads(); return; }
+    if(!r.ok) throw new Error("bad status");
+    const list = await r.json();
+    if(!list.length){ flash("עדיין לא התקבלו הזמנות"); return; }
+    showLeads(list);
+  }catch(e){
+    flash("לא הצלחתי לטעון את ההזמנות");
+  }
+}
+
+function showLeads(list){
+  const w = window.open("", "_blank");
+  if(!w){ flash("הדפדפן חסם את החלון. אפשרי חלונות קופצים לאתר ונסי שוב."); return; }
+
+  const line = (label, value) => value ? `<p><b>${esc(label)}:</b> ${esc(value)}</p>` : "";
+  const rows = list.map(o => `<article>
+      <header><h2>${esc(o.name)}</h2><time>${esc(niceDate(o.created_at))}</time></header>
+      ${line("מהזמנה", o.client_name)}
+      ${line("טלפון", o.phone)}
+      <p><b>מייל:</b> <a href="mailto:${esc(o.email)}">${esc(o.email)}</a></p>
+      ${line("תאריך האירוע", o.event_date)}
+      ${line("חבילה", o.package)}
+      ${line("אמצעי תשלום", o.payment_method)}
+      ${o.notes ? `<p class="notes">${esc(o.notes).replace(/\n/g, "<br>")}</p>` : ""}
+    </article>`).join("");
+
+  const plainLine = (label, value) => value ? `${label}: ${value}\n` : "";
+  const plain = list.map(o =>
+    `${o.name} — ${niceDate(o.created_at)}\n` +
+    plainLine("מהזמנה", o.client_name) + plainLine("טלפון", o.phone) +
+    `מייל: ${o.email}\n` + plainLine("תאריך האירוע", o.event_date) +
+    plainLine("חבילה", o.package) + plainLine("אמצעי תשלום", o.payment_method) +
+    (o.notes || "")
+  ).join("\n\n———\n\n");
+
+  w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+<title>הזמנות שהתקבלו</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem 1.5rem;background:#f6f4f0;color:#1c1a24;
+    font:16px/1.65 "Assistant","Segoe UI",system-ui,sans-serif}
+  .sheet{max-width:46rem;margin:0 auto}
+  h1{font-size:1.5rem;margin:0 0 .25rem}
+  .sub{color:#6b6577;font-size:.9rem;margin:0 0 1.5rem}
+  .bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.75rem}
+  button{font:inherit;font-size:.9rem;cursor:pointer;border:1px solid #c9c3d4;
+    background:#fff;color:#1c1a24;border-radius:.4rem;padding:.5rem .95rem}
+  button:hover{border-color:#8a7fb0}
+  article{background:#fff;border:1px solid #e2ddea;border-radius:.5rem;
+    padding:1rem 1.15rem;margin-bottom:.9rem;break-inside:avoid}
+  header{display:flex;justify-content:space-between;align-items:baseline;
+    gap:1rem;margin-bottom:.4rem}
+  h2{font-size:1.02rem;margin:0}
+  time{color:#7a7488;font-size:.8rem;white-space:nowrap}
+  p{margin:0 0 .3rem;white-space:pre-wrap}
+  p.notes{margin-top:.5rem}
+  a{color:inherit}
+  @media print{
+    body{background:#fff;padding:0}
+    .bar{display:none}
+    article{border-color:#ccc;box-shadow:none}
+  }
+</style></head><body><div class="sheet">
+  <h1>הזמנות שהתקבלו</h1>
+  <p class="sub">${list.length} הזמנות · הופק ב-${esc(niceDate(new Date().toISOString()))}</p>
+  <div class="bar">
+    <button onclick="print()">הדפסה / שמירה כ-PDF</button>
+    <button onclick="dl()">הורדה כקובץ טקסט</button>
+  </div>
+  ${rows}
+</div>
+<script>
+  var TXT = ${JSON.stringify(plain)};
+  var NAME = ${JSON.stringify("הזמנות שהתקבלו.txt")};
+  function dl(){
+    var b = new Blob([TXT], {type:"text/plain;charset=utf-8"});
+    var u = URL.createObjectURL(b), a = document.createElement("a");
+    a.href = u; a.download = NAME; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+  }
+<\/script></body></html>`);
+  w.document.close();
+}
 
 async function copyLink(){
   const c = cur(); if(!c) return;
@@ -686,7 +777,11 @@ function renderEditor(){
 
     ${SEC("כפתור הסיום — פנייה אלייך",
       F("טקסט הכפתור","ctaText","מופיע בתחתית ההזמנה במקום שורת הסיום") +
-      F("המייל שלך","ctaEmail","הכפתור פותח חלונית להשארת שם ומייל, והפנייה נשלחת לכתובת הזו. אם ריק — נשלחת ל-NOTIFY_EMAIL."))}
+      F("המייל שלך","ctaEmail","הכפתור פותח טופס הזמנה (שם, טלפון, מייל, תאריך, חבילה, הערות), והפנייה נשלחת לכתובת הזו ונשמרת גם ב\"הזמנות שהתקבלו\" למעלה. אם ריק — נשלחת ל-NOTIFY_EMAIL.") +
+      `<hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">` +
+      F("חבילה 1","orderOption1","הטקסט שיוצג בטופס, למשל: צד אחד — 250 ₪") +
+      F("חבילה 2","orderOption2","למשל: שני צדדים — 400 ₪") +
+      F("פרטי חשבון להעברה בנקאית","bankDetails",null,3))}
 
     ${SEC("מוזיקה",
       AUDIO("קובץ המוזיקה","musicUrl","אפשר להעלות קובץ מהמחשב (mp3, m4a, ogg, wav — עד 20MB) או להדביק קישור בשדה למטה. אם ריק — הפופ-אפ והנגן לא יוצגו כלל.") +

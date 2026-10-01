@@ -309,7 +309,8 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
 .dialog{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   padding:0 1.5rem;animation:fadein .9s both}
 .dialog-veil{position:absolute;inset:0;background:oklch(0.10 0.03 310 / .64);backdrop-filter:blur(6px)}
-.dialog-box{position:relative;width:100%;max-width:36rem;border-radius:1.6rem;text-align:center;
+.dialog-box{position:relative;width:100%;max-width:36rem;max-height:min(88vh,50rem);overflow-y:auto;
+  border-radius:1.6rem;text-align:center;
   padding:3.2rem 2.5rem 2.9rem;color:oklch(0.20 0.03 300);
   background:linear-gradient(150deg, oklch(0.99 0.005 90 / .97), oklch(0.95 0.012 88 / .95));
   box-shadow:0 50px 110px -50px oklch(0 0 0 / .95);animation:zoomin 1s cubic-bezier(.16,1,.3,1) both}
@@ -331,6 +332,16 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
   color:oklch(0.20 0.03 300);outline:none;border-radius:0;transition:border-color .4s}
 .lead-fields input:focus{border-color:var(--gold-deep)}
 .lead-fields input[dir="ltr"]{text-align:right}
+.lead-fields textarea{margin-top:.45rem;width:100%;border:1px solid oklch(0.3 0.03 300 / .3);
+  border-radius:.6rem;background:transparent;padding:.6rem .7rem;font-size:1.05rem;
+  font-family:var(--body);color:oklch(0.20 0.03 300);outline:none;resize:vertical;transition:border-color .4s}
+.lead-fields textarea:focus{border-color:var(--gold-deep)}
+.lead-group > span{display:block;font-family:var(--head);font-size:1rem;font-weight:500;color:oklch(0.42 0.02 300)}
+.lead-radio{margin-top:.6rem;display:flex;align-items:center;gap:.6rem;font-size:1.05rem;cursor:pointer}
+.lead-radio:not(:first-of-type){margin-top:.5rem}
+.lead-radio input{width:1.15rem;height:1.15rem;accent-color:var(--gold-deep);flex-shrink:0}
+.lead-bank{margin-top:.7rem;border-radius:.6rem;padding:.8rem .9rem;font-size:.98rem;line-height:1.6;
+  white-space:pre-wrap;background:oklch(0.3 0.03 300 / .06);color:oklch(0.3 0.03 300 / .85)}
 .lead-trap{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;opacity:0}
 .dialog-box .lead-err{margin-top:1.1rem;font-size:1rem;color:oklch(0.52 0.17 25)}
 .lead-err a{color:inherit;font-weight:700}
@@ -419,10 +430,23 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
     </button>
     <form id="lform" onsubmit="sendLead(event)" novalidate>
       <h2 id="lt">רוצים גם הזמנה כזו?</h2>
-      <p>השאירו שם ומייל, ואחזור אליכם בהקדם</p>
+      <p>מלאו פרטים ונחזור אליכם לסגירת ההזמנה</p>
       <div class="lead-fields">
         <label>שם<input id="ln" name="name" autocomplete="name" maxlength="200" required></label>
+        <label>טלפון<input id="lp" name="phone" type="tel" dir="ltr" autocomplete="tel" maxlength="50" required></label>
         <label>מייל<input id="le" name="email" type="email" dir="ltr" autocomplete="email" maxlength="200" required></label>
+        <label>תאריך האירוע (אם כבר ידוע)<input id="ldate" name="eventDate" type="date"></label>
+        <div class="lead-group" id="lpkgGroup">
+          <span>איזו חבילה?</span>
+          <label class="lead-radio"><input type="radio" name="lpkg" value="1" checked><span id="lpkg1"></span></label>
+          <label class="lead-radio"><input type="radio" name="lpkg" value="2"><span id="lpkg2"></span></label>
+        </div>
+        <div class="lead-group">
+          <span>אמצעי תשלום</span>
+          <label class="lead-radio"><input type="radio" name="lpay" value="העברה בנקאית" checked><span>העברה בנקאית</span></label>
+          <div class="lead-bank" id="lbank" hidden></div>
+        </div>
+        <label>הערות (לא חובה)<textarea id="lnotes" name="notes" rows="2" maxlength="2000"></textarea></label>
         <!-- מלכודת לבוטים: מוסתרת מבני אדם -->
         <input id="lw" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="lead-trap">
       </div>
@@ -430,7 +454,7 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
       <div class="dialog-actions">
         <button class="btn btn-dark" type="submit">
           <svg class="ico" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
-          שליחה
+          שליחת ההזמנה
         </button>
       </div>
     </form>
@@ -501,6 +525,9 @@ const data = {
 
   ctaText: "רוצים גם הזמנה כזו?",
   ctaEmail: "",
+  orderOption1: "צד אחד",
+  orderOption2: "שני צדדים",
+  bankDetails: "",
 
   musicUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=solo-piano-melody-118392.mp3",
 };
@@ -1118,12 +1145,18 @@ function reset2(){
 }
 
 /* ===== פופאפ פנייה ("רוצים גם הזמנה כזו?") =====
-   שם + מייל נשלחים ל-/api/lead, שמעביר אותם במייל לכתובת "המייל שלך" של ההזמנה. */
+   פרטי ההזמנה נשלחים ל-/api/lead, שמעביר אותם במייל לכתובת "המייל שלך" של
+   ההזמנה ושומר אותם במסד (טבלת leads), כדי שאפשר יהיה לראות אותם גם בפאנל. */
 let leadOpener = null;
 function openLead(){
   const box = document.getElementById('lead');
   leadOpener = document.activeElement;
   if(has(data.ctaText)) document.getElementById('lt').textContent = data.ctaText;
+  document.getElementById('lpkg1').textContent = has(data.orderOption1) ? data.orderOption1 : "אפשרות 1";
+  document.getElementById('lpkg2').textContent = has(data.orderOption2) ? data.orderOption2 : "אפשרות 2";
+  const bank = document.getElementById('lbank');
+  bank.hidden = !has(data.bankDetails);
+  bank.textContent = data.bankDetails || "";
   document.getElementById('lform').hidden = false;
   document.getElementById('lsent').hidden = true;
   document.getElementById('lerr').hidden = true;
@@ -1144,19 +1177,27 @@ function leadError(msg){
 }
 function sendLead(e){
   e.preventDefault();
-  const n = document.getElementById('ln'), m = document.getElementById('le');
-  const name = n.value.trim(), email = m.value.trim();
+  const n = document.getElementById('ln'), p = document.getElementById('lp'), m = document.getElementById('le');
+  const name = n.value.trim(), phone = p.value.trim(), email = m.value.trim();
   if(!name){ leadError('נא למלא שם'); n.focus(); return; }
+  if(!phone){ leadError('נא למלא טלפון'); p.focus(); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ leadError('נא למלא כתובת מייל תקינה'); m.focus(); return; }
   document.getElementById('lerr').hidden = true;
   const btn = e.target.querySelector('button[type="submit"]');
   if(btn) btn.disabled = true;
+  const pkgValue = document.querySelector('input[name="lpkg"]:checked').value;
+  const pkg = pkgValue === '2' ? document.getElementById('lpkg2').textContent : document.getElementById('lpkg1').textContent;
+  const paymentMethod = document.querySelector('input[name="lpay"]:checked').value;
   fetch('/api/lead', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       slug: (window.CLIENT_SLUG || ''),
-      name, email,
+      name, phone, email,
+      eventDate: document.getElementById('ldate').value,
+      package: pkg,
+      paymentMethod,
+      notes: document.getElementById('lnotes').value.trim(),
       website: document.getElementById('lw').value
     })
   }).then(r => { if(!r.ok) throw new Error('bad response'); return r.json(); })
