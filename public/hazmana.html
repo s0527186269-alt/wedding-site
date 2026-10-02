@@ -337,11 +337,31 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
   font-family:var(--body);color:oklch(0.20 0.03 300);outline:none;resize:vertical;transition:border-color .4s}
 .lead-fields textarea:focus{border-color:var(--gold-deep)}
 .lead-group > span{display:block;font-family:var(--head);font-size:1rem;font-weight:500;color:oklch(0.42 0.02 300)}
-.lead-pkg{margin-top:.6rem;display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;
-  border:1px solid oklch(0.3 0.03 300 / .25);border-radius:.8rem;padding:.85rem 1rem;transition:border-color .3s,background .3s}
-.lead-pkg:has(input:checked){border-color:var(--gold-deep);background:oklch(0.84 0.11 82 / .08)}
-.lead-pkg input{width:1.15rem;height:1.15rem;margin-top:.15rem;accent-color:var(--gold-deep);flex-shrink:0}
-.lead-pkg-text{white-space:pre-wrap;font-size:1.02rem;line-height:1.5}
+.lead-pkg{position:relative;margin-top:.7rem;display:flex;align-items:center;gap:.9rem;cursor:pointer;
+  border:1.5px solid oklch(0.3 0.03 300 / .18);border-radius:1rem;padding:1rem 1.1rem;
+  background:oklch(1 0 0 / .5);transition:border-color .25s,background .25s,transform .25s,box-shadow .25s}
+.lead-date{margin-top:.45rem;display:flex;align-items:center;gap:.65rem;padding:0 1rem;
+  border:1.5px solid oklch(0.3 0.03 300 / .18);border-radius:1rem;background:oklch(1 0 0 / .5);
+  transition:border-color .25s,box-shadow .25s}
+.lead-date:focus-within{border-color:var(--gold-deep);box-shadow:0 0 0 3px oklch(0.84 0.11 82 / .18)}
+.lead-date .ico{width:1.25rem;height:1.25rem;flex-shrink:0;color:var(--gold-deep)}
+.lead-fields .lead-date input{margin-top:0;border-bottom:0;padding:.85rem 0}
+.lead-date input::placeholder{color:oklch(0.3 0.03 300 / .4)}
+.lead-fields .lead-pkg{display:flex}
+.lead-pkg:hover{transform:translateY(-2px);box-shadow:0 12px 26px -18px oklch(0 0 0 / .4)}
+.lead-pkg:has(input:checked){border-color:var(--gold-deep);background:oklch(0.84 0.11 82 / .1);
+  box-shadow:0 14px 30px -18px oklch(0.6 0.15 80 / .5)}
+.lead-pkg input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.lead-pkg-dot{flex-shrink:0;width:1.4rem;height:1.4rem;border-radius:9999px;
+  border:2px solid oklch(0.3 0.03 300 / .3);display:flex;align-items:center;justify-content:center;
+  transition:border-color .25s}
+.lead-pkg-dot::after{content:"";width:.65rem;height:.65rem;border-radius:9999px;
+  background:var(--gold-deep);transform:scale(0);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.lead-pkg:has(input:checked) .lead-pkg-dot{border-color:var(--gold-deep)}
+.lead-pkg:has(input:checked) .lead-pkg-dot::after{transform:scale(1)}
+.lead-pkg-body{display:flex;flex-direction:column;gap:.1rem}
+.lead-pkg-title{font-family:var(--head);font-weight:600;font-size:1.03rem;color:oklch(0.35 0.03 300)}
+.lead-pkg-price{font-family:var(--head);font-weight:800;font-size:1.35rem;color:var(--gold-deep)}
 .lead-trap{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;opacity:0}
 .dialog-box .lead-err{margin-top:1.1rem;font-size:1rem;color:oklch(0.52 0.17 25)}
 .lead-err a{color:inherit;font-weight:700}
@@ -433,13 +453,25 @@ footer .rule{width:12rem;margin:0 auto 2.6rem}
       <p>מלאו פרטים ונחזור אליכם לסגירת ההזמנה</p>
       <div class="lead-fields">
         <label>שם<input id="ln" name="name" autocomplete="name" maxlength="200" required></label>
-        <label>טלפון<input id="lp" name="phone" type="tel" dir="ltr" autocomplete="tel" maxlength="50" required></label>
         <label>מייל<input id="le" name="email" type="email" dir="ltr" autocomplete="email" maxlength="200" required></label>
-        <label>תאריך האירוע<input id="ldate" name="eventDate" type="text" maxlength="100"></label>
+        <label>תאריך האירוע
+          <span class="lead-date">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <input id="ldate" name="eventDate" type="text" maxlength="100" placeholder="למשל: כ״ה בתמוז תשפ״ז">
+          </span>
+        </label>
         <div class="lead-group" id="lpkgGroup">
           <span>איזו חבילה?</span>
-          <label class="lead-pkg"><input type="radio" name="lpkg" value="1" checked><span class="lead-pkg-text" id="lpkg1"></span></label>
-          <label class="lead-pkg"><input type="radio" name="lpkg" value="2"><span class="lead-pkg-text" id="lpkg2"></span></label>
+          <label class="lead-pkg">
+            <input type="radio" name="lpkg" value="1" checked>
+            <span class="lead-pkg-dot"></span>
+            <span class="lead-pkg-body"><span class="lead-pkg-title" id="lpkg1t"></span><span class="lead-pkg-price" id="lpkg1p"></span></span>
+          </label>
+          <label class="lead-pkg">
+            <input type="radio" name="lpkg" value="2">
+            <span class="lead-pkg-dot"></span>
+            <span class="lead-pkg-body"><span class="lead-pkg-title" id="lpkg2t"></span><span class="lead-pkg-price" id="lpkg2p"></span></span>
+          </label>
         </div>
         <label>יש משהו שחשוב לכם לציין?<textarea id="lnotes" name="notes" rows="2" maxlength="2000"></textarea></label>
         <!-- מלכודת לבוטים: מוסתרת מבני אדם -->
@@ -528,8 +560,8 @@ const data = {
 // חבילות ההזמנה בטופס "רוצים גם הזמנה כזו?" — קבועות ואחידות לכל ההזמנות,
 // ולכן מחוץ ל-data (לא מוגדרות מחדש בכל לקוח). לשינוי המחיר/הטקסט: כאן בלבד.
 const ORDER_OPTIONS = {
-  1: "הזמנה אחת — 350 ש״ח",
-  2: "הזמנה ל-2 המשפחות — 550 ש״ח",
+  1: { title: "הזמנה אחת", price: "350 ש״ח" },
+  2: { title: "הזמנה ל-2 המשפחות", price: "550 ש״ח" },
 };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
@@ -1151,8 +1183,10 @@ function openLead(){
   const box = document.getElementById('lead');
   leadOpener = document.activeElement;
   if(has(data.ctaText)) document.getElementById('lt').textContent = data.ctaText;
-  document.getElementById('lpkg1').textContent = ORDER_OPTIONS[1];
-  document.getElementById('lpkg2').textContent = ORDER_OPTIONS[2];
+  document.getElementById('lpkg1t').textContent = ORDER_OPTIONS[1].title;
+  document.getElementById('lpkg1p').textContent = ORDER_OPTIONS[1].price;
+  document.getElementById('lpkg2t').textContent = ORDER_OPTIONS[2].title;
+  document.getElementById('lpkg2p').textContent = ORDER_OPTIONS[2].price;
   document.getElementById('lform').hidden = false;
   document.getElementById('lsent').hidden = true;
   document.getElementById('lerr').hidden = true;
@@ -1173,22 +1207,22 @@ function leadError(msg){
 }
 function sendLead(e){
   e.preventDefault();
-  const n = document.getElementById('ln'), p = document.getElementById('lp'), m = document.getElementById('le');
-  const name = n.value.trim(), phone = p.value.trim(), email = m.value.trim();
+  const n = document.getElementById('ln'), m = document.getElementById('le');
+  const name = n.value.trim(), email = m.value.trim();
   if(!name){ leadError('נא למלא שם'); n.focus(); return; }
-  if(!phone){ leadError('נא למלא טלפון'); p.focus(); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ leadError('נא למלא כתובת מייל תקינה'); m.focus(); return; }
   document.getElementById('lerr').hidden = true;
   const btn = e.target.querySelector('button[type="submit"]');
   if(btn) btn.disabled = true;
   const pkgValue = document.querySelector('input[name="lpkg"]:checked').value;
-  const pkg = pkgValue === '2' ? document.getElementById('lpkg2').textContent : document.getElementById('lpkg1').textContent;
+  const chosen = ORDER_OPTIONS[pkgValue];
+  const pkg = chosen.title + " — " + chosen.price;
   fetch('/api/lead', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       slug: (window.CLIENT_SLUG || ''),
-      name, phone, email,
+      name, email,
       eventDate: document.getElementById('ldate').value,
       package: pkg,
       notes: document.getElementById('lnotes').value.trim(),
